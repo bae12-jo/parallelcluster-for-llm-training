@@ -421,6 +421,34 @@
           "placement": "bottom"
         }
       }
+    },
+    {
+      "id": 11,
+      "title": "Node Down / Draining Reasons",
+      "type": "table",
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "targets": [
+        {
+          "expr": "slurm_node_state_reason{state!~\"idle|allocated|mixed\"} == 1",
+          "legendFormat": "{{node}} \u2014 {{state}}: {{reason}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "sortBy": [],
+        "footer": {
+          "show": false
+        }
+      }
     }
   ],
   "templating": {
