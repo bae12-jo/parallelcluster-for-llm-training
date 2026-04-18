@@ -172,6 +172,10 @@ Deployed automatically when `MonitoringType=self-hosting`:
 | node_exporter | v1.11.1 | 9100 (all nodes) |
 | slurm_exporter | v1.8.0 | 8080 (head node) |
 
+The monitoring instance uses **Ubuntu 22.04 LTS**, resolved at deploy time via SSM:
+`/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id`
+This always resolves to the latest Ubuntu 22.04 AMI in the target region (no hardcoded AMI ID).
+
 DCGM Exporter 4.5.2 supports A10G, H100, H200, B200, GB200.
 
 Prometheus uses EC2 service discovery via `parallelcluster:cluster-name` and `slurm:hostname` tags — no manual target configuration needed.

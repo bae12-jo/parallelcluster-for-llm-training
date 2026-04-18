@@ -1150,7 +1150,7 @@ Resources:
     Condition: IsSelfHosting
     Properties:
       InstanceType: t3.medium
-      ImageId: ami-05e86b3611c60b0b4  # Ubuntu 22.04 LTS us-east-1; update for other regions
+      ImageId: "{{resolve:ssm:/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id}}"
       KeyName: !If [IsSelfHosting, !Ref MonitoringKeyPair, !Ref 'AWS::NoValue']
       IamInstanceProfile: !Ref MonitoringInstanceProfile
       BlockDeviceMappings:
