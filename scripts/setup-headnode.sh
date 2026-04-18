@@ -214,7 +214,41 @@ cat > /etc/cron.d/tag-compute-nodes << 'CRONEOF'
 */5 * * * * root /usr/local/bin/tag-compute-nodes.sh >> /var/log/tag-compute-nodes.log 2>&1
 CRONEOF
 
+# ---- Slurm node state + down reason collector ----
+# Exposes node state and drain/down reason as Prometheus textfile metrics.
+# Enables time-series tracking of why nodes went down in Grafana.
+# Metric: slurm_node_state_reason{node, state, reason} 1
+cat > /usr/local/bin/slurm-node-reason-collector.sh << 'REASONEOF'
+#!/bin/bash
+OUTFILE="/var/lib/node_exporter/textfile/slurm_node_reason.prom"
+TMPFILE="${OUTFILE}.tmp"
+> "${TMPFILE}"
+
+scontrol show node -o 2>/dev/null | while read -r line; do
+  NODE=$(echo "$line" | grep -oP 'NodeName=\K\S+')
+  STATE=$(echo "$line" | grep -oP 'State=\K\S+')
+  REASON=$(echo "$line" | grep -oP 'Reason=\K[^@\n]+' | sed 's/[[:space:]]*$//' | tr -d '"\\')
+  [ -z "$NODE" ] && continue
+  STATE_CLEAN=$(echo "$STATE" | tr '[:upper:]' '[:lower:]' | tr -d '*+~#$')
+  REASON_CLEAN=$(echo "$REASON" | sed 's/[^a-zA-Z0-9 ._:-]//g' | cut -c1-128)
+  echo "slurm_node_state_reason{node=\"${NODE}\",state=\"${STATE_CLEAN}\",reason=\"${REASON_CLEAN}\"} 1" >> "${TMPFILE}"
+done
+
+mv "${TMPFILE}" "${OUTFILE}" 2>/dev/null || true
+REASONEOF
+chmod +x /usr/local/bin/slurm-node-reason-collector.sh
+
+# Run every 30 seconds via two cron entries (cron minimum is 1min)
+cat >> /etc/cron.d/tag-compute-nodes << 'CRONEOF'
+* * * * * root /usr/local/bin/slurm-node-reason-collector.sh
+* * * * * root sleep 30; /usr/local/bin/slurm-node-reason-collector.sh
+CRONEOF
+
+# Seed initial run (slurm may not be ready yet — ignore errors)
+/usr/local/bin/slurm-node-reason-collector.sh || true
+
 echo "=== HeadNode monitoring setup complete ==="
 echo "  node_exporter : :9100"
 echo "  slurm_exporter: :8080 (installing in background, ~10min)"
 echo "  compute tagging: cron every 5min via /usr/local/bin/tag-compute-nodes.sh"
+echo "  slurm reason  : cron every 30s via /usr/local/bin/slurm-node-reason-collector.sh"
