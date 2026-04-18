@@ -1,10 +1,10 @@
-# ✅ Optional Components 업데이트 완료
+#  Optional Components 업데이트 완료
 
-## 🎯 목표 달성
+##  목표 달성
 
 Compute node에서 EFA Installer, DCGM Exporter, Node Exporter를 선택적으로 설치할 수 있도록 개선했습니다.
 
-## 📝 변경 사항
+##  변경 사항
 
 ### 1. environment-variables-bailey.sh
 새로운 선택적 플래그 추가:
@@ -32,21 +32,21 @@ export ENABLE_NODE_EXPORTER="true"      # 시스템 메트릭 (Prometheus용)
   - EFA 설정 섹션 추가
   - 인스턴스 타입별 설정 테이블
 
-## 🎯 인스턴스 타입별 권장 설정
+##  인스턴스 타입별 권장 설정
 
 ### GPU + EFA (p5en, p5, p4d) - 멀티 노드 분산 학습
 ```bash
-export ENABLE_EFA_INSTALLER="true"      # ✅ 고속 네트워킹 (3.2Tbps)
-export ENABLE_DCGM_EXPORTER="true"      # ✅ GPU 메트릭
-export ENABLE_NODE_EXPORTER="true"      # ✅ 시스템 메트릭
+export ENABLE_EFA_INSTALLER="true"      #  고속 네트워킹 (3.2Tbps)
+export ENABLE_DCGM_EXPORTER="true"      #  GPU 메트릭
+export ENABLE_NODE_EXPORTER="true"      #  시스템 메트릭
 ```
 
 **설치되는 항목:**
-- ✅ EFA Driver + libfabric
-- ✅ DCGM Exporter (port 9400)
-- ✅ Node Exporter (port 9100)
-- ✅ CloudWatch Agent
-- ✅ Docker, NCCL
+-  EFA Driver + libfabric
+-  DCGM Exporter (port 9400)
+-  Node Exporter (port 9100)
+-  CloudWatch Agent
+-  Docker, NCCL
 
 **사용 사례:** 대규모 멀티 노드 GPU 학습
 
@@ -54,17 +54,17 @@ export ENABLE_NODE_EXPORTER="true"      # ✅ 시스템 메트릭
 
 ### GPU Only (g5, g4dn) - 단일 노드 학습
 ```bash
-export ENABLE_EFA_INSTALLER="false"     # ❌ EFA 미지원
-export ENABLE_DCGM_EXPORTER="true"      # ✅ GPU 메트릭
-export ENABLE_NODE_EXPORTER="true"      # ✅ 시스템 메트릭
+export ENABLE_EFA_INSTALLER="false"     #  EFA 미지원
+export ENABLE_DCGM_EXPORTER="true"      #  GPU 메트릭
+export ENABLE_NODE_EXPORTER="true"      #  시스템 메트릭
 ```
 
 **설치되는 항목:**
-- ❌ EFA Driver (비활성화)
-- ✅ DCGM Exporter (port 9400)
-- ✅ Node Exporter (port 9100)
-- ✅ CloudWatch Agent
-- ✅ Docker
+-  EFA Driver (비활성화)
+-  DCGM Exporter (port 9400)
+-  Node Exporter (port 9100)
+-  CloudWatch Agent
+-  Docker
 
 **사용 사례:** 단일 노드 GPU 학습, 추론
 
@@ -72,17 +72,17 @@ export ENABLE_NODE_EXPORTER="true"      # ✅ 시스템 메트릭
 
 ### Non-GPU (c5, m5, r5) - 일반 컴퓨팅
 ```bash
-export ENABLE_EFA_INSTALLER="false"     # ❌ EFA 미지원
-export ENABLE_DCGM_EXPORTER="false"     # ❌ GPU 없음
-export ENABLE_NODE_EXPORTER="true"      # ✅ 시스템 메트릭
+export ENABLE_EFA_INSTALLER="false"     #  EFA 미지원
+export ENABLE_DCGM_EXPORTER="false"     #  GPU 없음
+export ENABLE_NODE_EXPORTER="true"      #  시스템 메트릭
 ```
 
 **설치되는 항목:**
-- ❌ EFA Driver (비활성화)
-- ❌ DCGM Exporter (비활성화)
-- ✅ Node Exporter (port 9100)
-- ✅ CloudWatch Agent
-- ✅ Docker
+-  EFA Driver (비활성화)
+-  DCGM Exporter (비활성화)
+-  Node Exporter (port 9100)
+-  CloudWatch Agent
+-  Docker
 
 **사용 사례:** 데이터 전처리, CPU 작업
 
@@ -90,34 +90,34 @@ export ENABLE_NODE_EXPORTER="true"      # ✅ 시스템 메트릭
 
 ### 최소 설정 (테스트/개발)
 ```bash
-export ENABLE_EFA_INSTALLER="false"     # ❌ EFA 미지원
-export ENABLE_DCGM_EXPORTER="false"     # ❌ GPU 없음
-export ENABLE_NODE_EXPORTER="false"     # ❌ Prometheus 사용 안 함
+export ENABLE_EFA_INSTALLER="false"     #  EFA 미지원
+export ENABLE_DCGM_EXPORTER="false"     #  GPU 없음
+export ENABLE_NODE_EXPORTER="false"     #  Prometheus 사용 안 함
 ```
 
 **설치되는 항목:**
-- ❌ EFA Driver (비활성화)
-- ❌ DCGM Exporter (비활성화)
-- ❌ Node Exporter (비활성화)
-- ✅ CloudWatch Agent (기본 로그만)
-- ✅ Docker
+-  EFA Driver (비활성화)
+-  DCGM Exporter (비활성화)
+-  Node Exporter (비활성화)
+-  CloudWatch Agent (기본 로그만)
+-  Docker
 
 **사용 사례:** 빠른 테스트, 최소 설정
 
-## 📊 비교 테이블
+##  비교 테이블
 
 | 컴포넌트 | GPU+EFA (p5) | GPU Only (g5) | Non-GPU (c5) | 최소 설정 |
 |----------|--------------|---------------|--------------|-----------|
-| **EFA Installer** | ✅ true | ❌ false | ❌ false | ❌ false |
-| **DCGM Exporter** | ✅ true | ✅ true | ❌ false | ❌ false |
-| **Node Exporter** | ✅ true | ✅ true | ✅ true | ❌ false |
-| **CloudWatch Agent** | ✅ 항상 | ✅ 항상 | ✅ 항상 | ✅ 항상 |
-| **고속 네트워킹** | ✅ 3.2Tbps | ❌ | ❌ | ❌ |
-| **GPU 메트릭** | ✅ | ✅ | ❌ | ❌ |
-| **시스템 메트릭** | ✅ | ✅ | ✅ | ❌ |
+| **EFA Installer** |  true |  false |  false |  false |
+| **DCGM Exporter** |  true |  true |  false |  false |
+| **Node Exporter** |  true |  true |  true |  false |
+| **CloudWatch Agent** |  항상 |  항상 |  항상 |  항상 |
+| **고속 네트워킹** |  3.2Tbps |  |  |  |
+| **GPU 메트릭** |  |  |  |  |
+| **시스템 메트릭** |  |  |  |  |
 | **설치 시간** | ~20분 | ~15분 | ~10분 | ~5분 |
 
-## 🚀 사용 방법
+##  사용 방법
 
 ### 1단계: 환경 변수 설정
 ```bash
@@ -169,17 +169,17 @@ sudo systemctl status node-exporter
 curl http://localhost:9100/metrics
 ```
 
-## ✅ 검증 완료
+##  검증 완료
 
 ```bash
-✓ Shell script 문법 검증 통과
-✓ 환경 변수 스크립트 검증 통과
-✓ 모든 인스턴스 타입 지원 (p5, g5, c5 등)
-✓ GPU 자동 감지 로직 추가
-✓ EFA 선택적 설치 지원
+ Shell script 문법 검증 통과
+ 환경 변수 스크립트 검증 통과
+ 모든 인스턴스 타입 지원 (p5, g5, c5 등)
+ GPU 자동 감지 로직 추가
+ EFA 선택적 설치 지원
 ```
 
-## 📚 문서
+##  문서
 
 ### 상세 가이드
 - **[NON-GPU-COMPUTE-NODES.md](config/cloudwatch/NON-GPU-COMPUTE-NODES.md)** (8.4KB, 270 lines)
@@ -191,7 +191,7 @@ curl http://localhost:9100/metrics
 - **[config/cloudwatch/README.md](config/cloudwatch/README.md)** - EFA 설정 섹션 추가
 - **[environment-variables-bailey.sh](environment-variables-bailey.sh)** - 3개 플래그 추가
 
-## 💡 주요 이점
+##  주요 이점
 
 ### 1. 비용 절감
 - EFA 미지원 인스턴스에서 불필요한 설치 제거
@@ -209,7 +209,7 @@ curl http://localhost:9100/metrics
 - 필요한 메트릭만 수집
 - Prometheus 부하 감소
 
-## 🔄 마이그레이션 가이드
+##  마이그레이션 가이드
 
 ### 기존 설정 (모두 설치)
 ```bash
@@ -235,21 +235,21 @@ export ENABLE_DCGM_EXPORTER="true"
 export ENABLE_NODE_EXPORTER="true"
 ```
 
-## 🎉 완료 상태
+##  완료 상태
 
 | 항목 | 상태 |
 |------|------|
-| EFA Installer 선택적 설치 | ✅ 완료 |
-| DCGM Exporter 선택적 설치 | ✅ 완료 |
-| Node Exporter 선택적 설치 | ✅ 완료 |
-| GPU 자동 감지 | ✅ 완료 |
-| 문서 업데이트 | ✅ 완료 |
-| 스크립트 검증 | ✅ 완료 |
-| 인스턴스 타입별 가이드 | ✅ 완료 |
+| EFA Installer 선택적 설치 |  완료 |
+| DCGM Exporter 선택적 설치 |  완료 |
+| Node Exporter 선택적 설치 |  완료 |
+| GPU 자동 감지 |  완료 |
+| 문서 업데이트 |  완료 |
+| 스크립트 검증 |  완료 |
+| 인스턴스 타입별 가이드 |  완료 |
 
 ---
 
 **업데이트 완료일**: 2025-11-20  
 **버전**: 1.1  
-**상태**: ✅ Production Ready  
+**상태**:  Production Ready  
 **지원 인스턴스**: p5, p4d, g5, g4dn, c5, m5, r5 등 모든 타입

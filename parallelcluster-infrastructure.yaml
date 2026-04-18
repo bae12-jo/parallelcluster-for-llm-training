@@ -1150,9 +1150,15 @@ Resources:
     Condition: IsSelfHosting
     Properties:
       InstanceType: t3.medium
-      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
+      ImageId: ami-05e86b3611c60b0b4  # Ubuntu 22.04 LTS us-east-1; update for other regions
       KeyName: !If [IsSelfHosting, !Ref MonitoringKeyPair, !Ref 'AWS::NoValue']
       IamInstanceProfile: !Ref MonitoringInstanceProfile
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 50
+            VolumeType: gp3
+            DeleteOnTermination: true
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
           DeviceIndex: 0
@@ -1165,31 +1171,153 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
-          set -e
-          
-          echo "=== Monitoring Instance Setup Started ==="
-          
-          # Install AWS CLI if not present
-          if ! command -v aws &> /dev/null; then
-            yum install -y aws-cli
-          fi
-          
-          # Download setup script from S3
-          # Note: S3 bucket name should be provided via environment variable or parameter
-          # For now, using a placeholder - update this after S3 bucket is created
-          S3_BUCKET="${S3BucketName}"
-          
-          echo "Downloading setup script from s3://$S3_BUCKET/config/monitoring/setup-monitoring-instance.sh"
-          aws s3 cp s3://$S3_BUCKET/config/monitoring/setup-monitoring-instance.sh /tmp/setup-monitoring-instance.sh
-          
-          # Make executable
-          chmod +x /tmp/setup-monitoring-instance.sh
-          
-          # Run setup script
-          echo "Running monitoring setup script..."
-          bash /tmp/setup-monitoring-instance.sh ${AWS::Region}
-          
-          echo "✓ Monitoring Instance Setup Complete"
+          set -euxo pipefail
+          export DEBIAN_FRONTEND=noninteractive
+
+          apt-get update
+          apt-get install -y ca-certificates curl gnupg unzip
+
+          # Docker
+          install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          chmod a+r /etc/apt/keyrings/docker.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
+          apt-get update
+          apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+          systemctl enable --now docker
+
+          # AWS CLI
+          curl -s https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o /tmp/awscliv2.zip
+          unzip -q /tmp/awscliv2.zip -d /tmp
+          /tmp/aws/install
+          rm -rf /tmp/awscliv2.zip /tmp/aws
+
+          mkdir -p /opt/monitoring/{prometheus,grafana/provisioning/datasources,grafana/provisioning/dashboards,grafana/dashboards}
+
+          # Prometheus config with EC2 service discovery
+          cat > /opt/monitoring/prometheus/prometheus.yml <<EOF
+          global:
+            scrape_interval: 15s
+            evaluation_interval: 15s
+
+          scrape_configs:
+            - job_name: prometheus
+              static_configs:
+                - targets: ['localhost:9090']
+
+            - job_name: node_exporter
+              ec2_sd_configs:
+                - region: ${AWS::Region}
+                  port: 9100
+                  filters:
+                    - name: tag:parallelcluster:cluster-name
+                      values: ['*']
+              relabel_configs:
+                - source_labels: [__meta_ec2_tag_Name]
+                  target_label: instance_name
+                - source_labels: [__meta_ec2_tag_parallelcluster_node_type]
+                  target_label: node_type
+                - source_labels: [__meta_ec2_tag_slurm__hostname]
+                  target_label: node_name
+                - source_labels: [__meta_ec2_private_ip]
+                  target_label: instance
+
+            - job_name: dcgm_exporter
+              ec2_sd_configs:
+                - region: ${AWS::Region}
+                  port: 9400
+                  filters:
+                    - name: tag:parallelcluster:node-type
+                      values: ['Compute']
+              relabel_configs:
+                - source_labels: [__meta_ec2_tag_slurm__hostname]
+                  target_label: node_name
+                - source_labels: [__meta_ec2_private_ip]
+                  target_label: instance
+
+            - job_name: slurm_exporter
+              ec2_sd_configs:
+                - region: ${AWS::Region}
+                  port: 8080
+                  filters:
+                    - name: tag:parallelcluster:node-type
+                      values: ['HeadNode']
+              relabel_configs:
+                - source_labels: [__meta_ec2_private_ip]
+                  target_label: instance
+          EOF
+
+          # Grafana datasource
+          cat > /opt/monitoring/grafana/provisioning/datasources/prometheus.yml <<EOF
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              access: proxy
+              url: http://prometheus:9090
+              isDefault: true
+              editable: true
+          EOF
+
+          # Grafana dashboard provisioning
+          cat > /opt/monitoring/grafana/provisioning/dashboards/dashboards.yml <<EOF
+          apiVersion: 1
+          providers:
+            - name: default
+              orgId: 1
+              folder: ''
+              type: file
+              disableDeletion: false
+              updateIntervalSeconds: 30
+              allowUiUpdates: true
+              options:
+                path: /var/lib/grafana/dashboards
+          EOF
+
+          # Download dashboards from S3
+          aws s3 sync s3://${S3BucketName}/dashboards/ /opt/monitoring/grafana/dashboards/             --region ${AWS::Region} --exclude "*.py" || true
+
+          # Docker Compose stack
+          cat > /opt/monitoring/docker-compose.yml <<EOF
+          services:
+            prometheus:
+              image: prom/prometheus:v3.11.2
+              container_name: prometheus
+              restart: unless-stopped
+              volumes:
+                - /opt/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+                - prometheus-data:/prometheus
+              command:
+                - --config.file=/etc/prometheus/prometheus.yml
+                - --storage.tsdb.path=/prometheus
+                - --storage.tsdb.retention.time=30d
+                - --web.enable-lifecycle
+              ports:
+                - "9090:9090"
+
+            grafana:
+              image: grafana/grafana-oss:13.0.1
+              container_name: grafana
+              restart: unless-stopped
+              depends_on: [prometheus]
+              environment:
+                GF_SECURITY_ADMIN_USER: admin
+                GF_SECURITY_ADMIN_PASSWORD: ${GrafanaAdminPassword}
+                GF_USERS_ALLOW_SIGN_UP: "false"
+              volumes:
+                - /opt/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+                - /opt/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+                - grafana-data:/var/lib/grafana
+              ports:
+                - "3000:3000"
+
+          volumes:
+            prometheus-data:
+            grafana-data:
+          EOF
+
+          cd /opt/monitoring && docker compose up -d
+          echo "Monitoring stack up — Grafana on :3000"
 
   # IAM Role for Monitoring Instance - Only for Self-hosting
   MonitoringInstanceRole:

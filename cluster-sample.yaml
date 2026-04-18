@@ -1,0 +1,134 @@
+# ParallelCluster config for GPU Cluster monitoring validation.
+# Test phase uses g5.12xlarge (A10G x8, EFA-enabled) for fast iteration.
+# Production swap: change COMPUTE_INSTANCE_TYPE to p6-b200.48xlarge.
+#
+# Placeholders (replace before `pcluster create-cluster`):
+#   <KEY_PAIR>             - EC2 key pair name
+#   <PRIVATE_SUBNET_ID>    - from CFn output PrivateSubnetId
+#   <PUBLIC_SUBNET_ID>     - from CFn output PublicSubnetId
+#   <HEADNODE_SG>          - from CFn output HeadNodeSGId
+#   <COMPUTE_SG>           - from CFn output ComputeNodeSGId
+#   <LOGIN_SG>             - from CFn output LoginNodeSGId
+#   <FSX_ID>               - from CFn output FSxLustreFilesystemId
+#   <S3_BUCKET>            - S3 bucket holding node setup scripts
+
+Region: <REGION>
+Image:
+  Os: ubuntu2204
+
+Imds:
+  ImdsSupport: v2.0
+
+HeadNode:
+  InstanceType: m5.2xlarge
+  Networking:
+    SubnetId: <PRIVATE_SUBNET_ID>
+    AdditionalSecurityGroups:
+      - <HEADNODE_SG>
+  Ssh:
+    KeyName: <KEY_PAIR>
+  LocalStorage:
+    RootVolume:
+      Size: 200
+      DeleteOnTermination: true
+  Iam:
+    AdditionalIamPolicies:
+      - Policy: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      - Policy: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+      - Policy: arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+  CustomActions:
+    OnNodeConfigured:
+      Script: s3://<S3_BUCKET>/scripts/setup-headnode.sh
+      Args:
+        - <S3_BUCKET>
+
+LoginNodes:
+  Pools:
+    - Name: login
+      Count: 1
+      InstanceType: m5.large
+      Networking:
+        SubnetIds:
+          - <PUBLIC_SUBNET_ID>
+        AdditionalSecurityGroups:
+          - <LOGIN_SG>
+      Iam:
+        AdditionalIamPolicies:
+          - Policy: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+          - Policy: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+
+Scheduling:
+  Scheduler: slurm
+  SlurmSettings:
+    ScaledownIdletime: 10
+    QueueUpdateStrategy: DRAIN
+    CustomSlurmSettings:
+      - KillWait: '120'
+      - SlurmdTimeout: '300'
+      - UnkillableStepTimeout: '180'
+  SlurmQueues:
+    - Name: gpu
+      CapacityType: ONDEMAND
+      Networking:
+        SubnetIds:
+          - <PRIVATE_SUBNET_ID>
+        PlacementGroup:
+          Enabled: true
+        AdditionalSecurityGroups:
+          - <COMPUTE_SG>
+      ComputeSettings:
+        LocalStorage:
+          RootVolume:
+            Size: 500
+          EphemeralVolume:
+            MountDir: /scratch
+      Iam:
+        AdditionalIamPolicies:
+          - Policy: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+          - Policy: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+          - Policy: arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+      JobExclusiveAllocation: true
+      ComputeResources:
+        - Name: gpu-nodes
+          # Test: g5.12xlarge (A10G x8, EFA, ~$16/hr)
+          # Prod:  p6-b200.48xlarge (B200 x8, EFA, capacity blocks recommended)
+          InstanceType: g5.12xlarge
+          MinCount: 2
+          MaxCount: 2
+          Efa:
+            Enabled: true
+          HealthChecks:
+            Gpu:
+              Enabled: true
+      CustomActions:
+        OnNodeConfigured:
+          Script: s3://<S3_BUCKET>/scripts/setup-compute-node.sh
+          Args:
+            - <S3_BUCKET>
+
+SharedStorage:
+  - MountDir: /fsx
+    Name: fsx
+    StorageType: FsxLustre
+    FsxLustreSettings:
+      FileSystemId: <FSX_ID>
+
+Monitoring:
+  Logs:
+    CloudWatch:
+      Enabled: true
+      RetentionInDays: 14
+  Dashboards:
+    CloudWatch:
+      Enabled: false
+
+DevSettings:
+  Timeouts:
+    HeadNodeBootstrapTimeout: 3600
+    ComputeNodeBootstrapTimeout: 2400
+
+Tags:
+  - Key: Project
+    Value: gpu-cluster-for-ml
+  - Key: Owner
+    Value: <YOUR_ALIAS>

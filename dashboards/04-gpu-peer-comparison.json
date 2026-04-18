@@ -1,0 +1,258 @@
+{
+  "uid": "p6-gpu-peer",
+  "title": "4. GPU Status \u2014 Peer Comparison",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "tags": [
+    "gpu-cluster",
+    "parallelcluster"
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "title": "GPU Utilization per Node (%)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "avg by (node_name) (DCGM_FI_DEV_GPU_UTIL)",
+          "legendFormat": "{{node_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "GPU Memory Used per Node (MiB)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "sum by (node_name) (DCGM_FI_DEV_FB_USED)",
+          "legendFormat": "{{node_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "GPU Temp per Node (\u00b0C)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "max by (node_name) (DCGM_FI_DEV_GPU_TEMP)",
+          "legendFormat": "{{node_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Power Usage per Node (W)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (node_name) (DCGM_FI_DEV_POWER_USAGE)",
+          "legendFormat": "{{node_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "GPU Hardware Faults (ECC Remapped Rows / Row Remap Failure)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "targets": [
+        {
+          "expr": "max by (node_name) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS)",
+          "legendFormat": "{{node_name}} uncorrectable",
+          "refId": "A"
+        },
+        {
+          "expr": "max by (node_name) (DCGM_FI_DEV_ROW_REMAP_FAILURE)",
+          "legendFormat": "{{node_name}} remap_fail",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Overview",
+      "url": "/d/p6-overview",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Cluster",
+      "url": "/d/p6-cluster-overview",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Job Queue",
+      "url": "/d/p6-job-queue",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "GPU Peer",
+      "url": "/d/p6-gpu-peer",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "EFA/NVLink",
+      "url": "/d/p6-efa-nvlink",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Host System",
+      "url": "/d/p6-host-system",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Z-Score",
+      "url": "/d/p6-zscore",
+      "type": "link",
+      "targetBlank": false
+    }
+  ]
+}

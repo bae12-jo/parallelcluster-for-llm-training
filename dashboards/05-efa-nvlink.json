@@ -1,0 +1,253 @@
+{
+  "uid": "p6-efa-nvlink",
+  "title": "5. Inter-Node Communication \u2014 EFA & NVLink",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "tags": [
+    "gpu-cluster",
+    "parallelcluster"
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "title": "EFA RX Bandwidth per Node (MB/s)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "sum by (node_name) (rate(node_efa_hw_rx_bytes[1m])) / 1e6",
+          "legendFormat": "{{node_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "MBs",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "EFA TX Bandwidth per Node (MB/s)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "sum by (node_name) (rate(node_efa_hw_tx_bytes[1m])) / 1e6",
+          "legendFormat": "{{node_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "MBs",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "EFA Retransmits per Node",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (node_name) (rate(node_efa_hw_retrans_pkts[5m]))",
+          "legendFormat": "{{node_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "EFA RX Drops per Node",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (node_name) (rate(node_efa_hw_rx_drops[5m]))",
+          "legendFormat": "{{node_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "EFA RDMA Write Bytes per Node (MB/s)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (node_name) (rate(node_efa_hw_rdma_write_bytes[1m])) / 1e6",
+          "legendFormat": "{{node_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "MBs",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Overview",
+      "url": "/d/p6-overview",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Cluster",
+      "url": "/d/p6-cluster-overview",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Job Queue",
+      "url": "/d/p6-job-queue",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "GPU Peer",
+      "url": "/d/p6-gpu-peer",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "EFA/NVLink",
+      "url": "/d/p6-efa-nvlink",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Host System",
+      "url": "/d/p6-host-system",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Z-Score",
+      "url": "/d/p6-zscore",
+      "type": "link",
+      "targetBlank": false
+    }
+  ]
+}

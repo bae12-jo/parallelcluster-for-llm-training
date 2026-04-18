@@ -1,0 +1,179 @@
+{
+  "uid": "p6-zscore",
+  "title": "7. Peer Outlier Detection \u2014 Z-Score",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "tags": [
+    "gpu-cluster",
+    "parallelcluster"
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "title": "GPU Utilization Z-Score (outlier = |z| > 2)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "(avg by (node_name) (DCGM_FI_DEV_GPU_UTIL) - scalar(avg(avg by (node_name) (DCGM_FI_DEV_GPU_UTIL)))) / (scalar(stddev(avg by (node_name) (DCGM_FI_DEV_GPU_UTIL))) + 0.0001)",
+          "legendFormat": "{{node_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "EFA RX Bandwidth Z-Score",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "(sum by (node_name) (rate(node_efa_hw_rx_bytes[1m])) - scalar(avg(sum by (node_name) (rate(node_efa_hw_rx_bytes[1m]))))) / (scalar(stddev(sum by (node_name) (rate(node_efa_hw_rx_bytes[1m])))) + 0.0001)",
+          "legendFormat": "{{node_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "CPU Utilization Z-Score",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "targets": [
+        {
+          "expr": "(avg by (node_name) (rate(node_cpu_seconds_total{mode!=\"idle\"}[5m])) - scalar(avg(avg by (node_name) (rate(node_cpu_seconds_total{mode!=\"idle\"}[5m]))))) / (scalar(stddev(avg by (node_name) (rate(node_cpu_seconds_total{mode!=\"idle\"}[5m])))) + 0.0001)",
+          "legendFormat": "{{node_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Overview",
+      "url": "/d/p6-overview",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Cluster",
+      "url": "/d/p6-cluster-overview",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Job Queue",
+      "url": "/d/p6-job-queue",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "GPU Peer",
+      "url": "/d/p6-gpu-peer",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "EFA/NVLink",
+      "url": "/d/p6-efa-nvlink",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Host System",
+      "url": "/d/p6-host-system",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Z-Score",
+      "url": "/d/p6-zscore",
+      "type": "link",
+      "targetBlank": false
+    }
+  ]
+}

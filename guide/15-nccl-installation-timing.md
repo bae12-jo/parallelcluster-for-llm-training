@@ -88,9 +88,9 @@ Cluster Creation Timeline:
 ```
 
 **Current setup (without NCCL):**
-- HeadNode ready: ~5 minutes ✅
-- ComputeNode ready: ~20 minutes ✅
-- Total cluster creation: ~25 minutes ✅
+- HeadNode ready: ~5 minutes 
+- ComputeNode ready: ~20 minutes 
+- Total cluster creation: ~25 minutes 
 
 **If NCCL was included:**
 - HeadNode ready: ~17 minutes (5 + 12)
@@ -101,7 +101,7 @@ Cluster Creation Timeline:
 
 ## Recommended Approach
 
-### Option 1: Use NGC Containers (Recommended) ✅
+### Option 1: Use NGC Containers (Recommended) 
 
 **No NCCL installation needed!**
 
@@ -116,10 +116,10 @@ srun --container-image=/fsx/containers/nvcr.io_nvidia_pytorch-24.01-py3.sqsh \
 ```
 
 **Advantages:**
-- ✅ Zero installation time
-- ✅ Pre-tested and optimized
-- ✅ Includes all dependencies
-- ✅ Easy to update (just download new container)
+-  Zero installation time
+-  Pre-tested and optimized
+-  Includes all dependencies
+-  Easy to update (just download new container)
 
 ### Option 2: Manual NCCL Installation (If Needed)
 
@@ -191,9 +191,9 @@ cat /fsx/nccl/.nccl_version
 
 | Method | Time | Complexity | Maintenance | Recommended |
 |--------|------|------------|-------------|-------------|
-| **NGC Container** | 0 min | Low | Easy | ✅ **Yes** |
-| Pre-built binary | 1-2 min | Low | Medium | ⚠️ If available |
-| Build from source | 10-15 min | High | Hard | ❌ Only if needed |
+| **NGC Container** | 0 min | Low | Easy |  **Yes** |
+| Pre-built binary | 1-2 min | Low | Medium | ️ If available |
+| Build from source | 10-15 min | High | Hard |  Only if needed |
 
 ---
 
@@ -236,9 +236,9 @@ GRAND TOTAL:          11-13 minutes
 **NCCL installation takes 10-15 minutes** - too long for automatic CustomActions.
 
 **Best practice:**
-1. ✅ Use NGC containers (NCCL included, 0 installation time)
-2. ⚠️ Manual install to FSx if specific version needed (one-time, 10-15 min)
-3. ❌ Don't include in CustomActions (delays cluster creation)
+1.  Use NGC containers (NCCL included, 0 installation time)
+2. ️ Manual install to FSx if specific version needed (one-time, 10-15 min)
+3.  Don't include in CustomActions (delays cluster creation)
 
 **Current setup is optimal:**
 - NGC containers download in background (doesn't block)

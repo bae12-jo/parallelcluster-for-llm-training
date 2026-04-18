@@ -1,0 +1,440 @@
+{
+  "uid": "p6-job-queue",
+  "title": "2. Job Queue",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "tags": [
+    "gpu-cluster",
+    "parallelcluster"
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "title": "Nodes Idle",
+      "type": "stat",
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "slurm_node_count_per_state{state=\"idle\"}",
+          "legendFormat": " ",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "title": "Nodes Allocated",
+      "type": "stat",
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "slurm_node_count_per_state{state=\"allocated\"}",
+          "legendFormat": " ",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Nodes Down",
+      "type": "stat",
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 8,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "slurm_node_count_per_state{state=\"down\"}",
+          "legendFormat": " ",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "title": "CPU Idle Cores",
+      "type": "stat",
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "slurm_cpus_idle",
+          "legendFormat": " ",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "title": "CPUs Allocated",
+      "type": "stat",
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 16,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "slurm_cpus_per_state{state=\"allocated\"}",
+          "legendFormat": " ",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 6,
+      "title": "Cluster Load",
+      "type": "stat",
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 20,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "slurm_cpu_load",
+          "legendFormat": " ",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 7,
+      "title": "Node Count by State",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 3
+      },
+      "targets": [
+        {
+          "expr": "slurm_node_count_per_state",
+          "legendFormat": "{{state}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "CPU Allocation",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 3
+      },
+      "targets": [
+        {
+          "expr": "slurm_cpus_per_state",
+          "legendFormat": "{{state}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "Memory Allocated vs Free (GB)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "targets": [
+        {
+          "expr": "slurm_mem_alloc / 1e9",
+          "legendFormat": "allocated",
+          "refId": "A"
+        },
+        {
+          "expr": "slurm_mem_free / 1e9",
+          "legendFormat": "free",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Overview",
+      "url": "/d/p6-overview",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Cluster",
+      "url": "/d/p6-cluster-overview",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Job Queue",
+      "url": "/d/p6-job-queue",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "GPU Peer",
+      "url": "/d/p6-gpu-peer",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "EFA/NVLink",
+      "url": "/d/p6-efa-nvlink",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Host System",
+      "url": "/d/p6-host-system",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Z-Score",
+      "url": "/d/p6-zscore",
+      "type": "link",
+      "targetBlank": false
+    }
+  ]
+}

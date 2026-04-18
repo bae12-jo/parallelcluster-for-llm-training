@@ -148,16 +148,16 @@ aws logs tail /aws/parallelcluster/p5en-48xlarge-cluster \
 
 ### When to increase:
 
-- ✅ Slow network regions
-- ✅ Large instance types (more drivers to install)
-- ✅ Custom AMIs with additional software
-- ✅ Complex CustomActions scripts
+-  Slow network regions
+-  Large instance types (more drivers to install)
+-  Custom AMIs with additional software
+-  Complex CustomActions scripts
 
 ### When to decrease:
 
-- ⚠️ Fast network, small instances
-- ⚠️ Minimal CustomActions
-- ⚠️ Want faster failure detection
+- ️ Fast network, small instances
+- ️ Minimal CustomActions
+- ️ Want faster failure detection
 
 **Recommendation**: Keep conservative values unless you have a specific reason to change.
 
@@ -174,8 +174,8 @@ set +e  # Don't exit on error
 (
     set +e
     echo "Installing component..."
-    install_component || echo "⚠️ Installation failed (non-critical)"
-) || echo "⚠️ Component setup failed"
+    install_component || echo "️ Installation failed (non-critical)"
+) || echo "️ Component setup failed"
 ```
 
 **Why**: Prevents timeout from script failures
@@ -198,7 +198,7 @@ All scripts log progress:
 ```bash
 echo "Step 1: Installing EFA..."
 # ... installation ...
-echo "✓ EFA installation complete"
+echo " EFA installation complete"
 ```
 
 **Why**: Easy to debug timeout issues
@@ -267,10 +267,10 @@ If script hangs indefinitely:
 ## Summary
 
 **Current Configuration**:
-- ✅ HeadNode: 60 minutes (12× safety margin)
-- ✅ ComputeNode: 40 minutes (2× safety margin)
-- ✅ All scripts have error handling
-- ✅ Long tasks run in background
-- ✅ Comprehensive logging
+-  HeadNode: 60 minutes (12× safety margin)
+-  ComputeNode: 40 minutes (2× safety margin)
+-  All scripts have error handling
+-  Long tasks run in background
+-  Comprehensive logging
 
 **Result**: Cluster creation should complete successfully without timeout issues.

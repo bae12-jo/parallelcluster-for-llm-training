@@ -2,7 +2,7 @@
 
 DCGM (NVIDIA Data Center GPU Manager) 메트릭을 CloudWatch에서 확인하는 방법입니다.
 
-## 📊 현재 아키텍처
+##  현재 아키텍처
 
 ```
 ComputeNode (GPU)
@@ -14,7 +14,7 @@ ComputeNode (GPU)
 
 **문제**: CloudWatch에서는 DCGM 메트릭을 볼 수 없음
 
-## 🎯 해결 방법
+##  해결 방법
 
 ### 방법 1: DCGM → CloudWatch 직접 전송 (권장)
 
@@ -110,7 +110,7 @@ aws cloudwatch get-dashboard \
 }
 ```
 
-## 📈 수집되는 GPU 메트릭
+##  수집되는 GPU 메트릭
 
 ### DCGM Exporter가 제공하는 메트릭
 
@@ -128,7 +128,7 @@ aws cloudwatch get-dashboard \
 - `InstanceId`: EC2 인스턴스 ID
 - `GPU`: GPU 번호 (0-7 for p5en.48xlarge)
 
-## 🔄 자동 설치 (HeadNode Setup에 통합)
+##  자동 설치 (HeadNode Setup에 통합)
 
 HeadNode setup 스크립트에 자동으로 추가하려면:
 
@@ -157,10 +157,10 @@ aws s3 cp config/cloudwatch/dcgm-to-cloudwatch.sh \
             chmod +x /tmp/dcgm-to-cloudwatch.sh
             bash /tmp/dcgm-to-cloudwatch.sh "${CLUSTER_NAME}" "${REGION}"
         else
-            echo "⚠️  DCGM to CloudWatch exporter script not found"
+            echo "️  DCGM to CloudWatch exporter script not found"
         fi
     fi
-) || echo "⚠️  DCGM to CloudWatch exporter installation failed (non-critical)"
+) || echo "️  DCGM to CloudWatch exporter installation failed (non-critical)"
 ```
 
 ### 3. 클러스터 재생성
@@ -176,7 +176,7 @@ pcluster create-cluster \
     --region ${AWS_REGION}
 ```
 
-## 📊 CloudWatch 대시보드 예제
+##  CloudWatch 대시보드 예제
 
 ### GPU 모니터링 대시보드
 
@@ -238,7 +238,7 @@ pcluster create-cluster \
 }
 ```
 
-## 🛠️ 트러블슈팅
+## ️ 트러블슈팅
 
 ### 문제: CloudWatch에 메트릭이 나타나지 않음
 
@@ -292,7 +292,7 @@ Environment="SCRAPE_INTERVAL=30"
 sudo systemctl restart dcgm-cloudwatch-exporter
 ```
 
-## 💰 비용 영향
+##  비용 영향
 
 ### CloudWatch 메트릭 비용
 
@@ -321,24 +321,24 @@ DCGM_METRICS = {
 Environment="SCRAPE_INTERVAL=300"  # 5분마다
 ```
 
-## 📚 관련 문서
+##  관련 문서
 
 - [DCGM Exporter](https://github.com/NVIDIA/dcgm-exporter)
 - [CloudWatch Custom Metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/publishingMetrics.html)
 - [Prometheus Python Client](https://github.com/prometheus/client_python)
 
-## 🎯 요약
+##  요약
 
 ### 권장 방법: DCGM → CloudWatch 직접 전송
 
 **장점:**
-- ✅ CloudWatch 대시보드에서 GPU 메트릭 확인 가능
-- ✅ CloudWatch Alarms 설정 가능
-- ✅ 다른 AWS 서비스와 통합 용이
+-  CloudWatch 대시보드에서 GPU 메트릭 확인 가능
+-  CloudWatch Alarms 설정 가능
+-  다른 AWS 서비스와 통합 용이
 
 **단점:**
-- ⚠️ 추가 비용 (~$30/month for 2 nodes)
-- ⚠️ 약간의 지연 (60초 스크랩 간격)
+- ️ 추가 비용 (~$30/month for 2 nodes)
+- ️ 약간의 지연 (60초 스크랩 간격)
 
 **대안:**
 - Grafana만 사용 (비용 없음, 실시간)

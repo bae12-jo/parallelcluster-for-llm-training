@@ -226,3 +226,57 @@ aws ec2 modify-instance-attribute \
 - [AWS Security Best Practices](https://aws.amazon.com/architecture/security-identity-compliance/)
 - [ParallelCluster Security](https://docs.aws.amazon.com/parallelcluster/latest/ug/security.html)
 - [AWS Systems Manager Session Manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html)
+
+---
+
+## Cluster Access Methods
+
+The HeadNode is in a private subnet and cannot be reached directly.
+Only the LoginNode is internet-facing (via ALB or public IP).
+
+### Method 1: Two-hop SSH
+
+```bash
+# Step 1: connect to LoginNode
+ssh -i /path/to/key.pem ec2-user@<LoginNode_DNS>
+
+# Step 2: from LoginNode, connect to HeadNode
+ssh <HeadNode_private_IP>
+```
+
+### Method 2: ProxyJump (recommended)
+
+Add to `~/.ssh/config`:
+
+```
+Host cluster-login
+  HostName <LoginNode_DNS>
+  User ec2-user
+  IdentityFile /path/to/key.pem
+
+Host cluster-headnode
+  HostName <HeadNode_private_IP>
+  User ec2-user
+  IdentityFile /path/to/key.pem
+  ProxyJump cluster-login
+```
+
+Then connect in a single command:
+
+```bash
+ssh cluster-headnode
+```
+
+### Method 3: pcluster ssh
+
+```bash
+pcluster ssh --cluster-name <CLUSTER_NAME> --region <REGION> -i /path/to/key.pem
+```
+
+Note: requires the HeadNode to be in a public subnet. The default configuration in this repository uses a private subnet, so Method 1 or Method 2 is recommended.
+
+### Security notes
+
+- Only the LoginNode is internet-facing. HeadNode and ComputeNodes are in private subnets and have no direct inbound access from the internet.
+- ProxyJump does not require SSH Agent Forwarding, which reduces credential exposure.
+- Restrict SSH access by setting `AllowedIPsForSSH` in the CloudFormation stack parameters to your IP or corporate CIDR.

@@ -2,7 +2,7 @@
 
 Complete guide for validating NCCL performance on AWS ParallelCluster with GPU instances.
 
-## 📋 Overview
+##  Overview
 
 This guide covers 4 phases of NCCL testing to validate your cluster's communication performance:
 
@@ -15,7 +15,7 @@ This guide covers 4 phases of NCCL testing to validate your cluster's communicat
 
 **Total testing time**: ~4 hours for complete validation
 
-## 🎯 Testing Goals
+##  Testing Goals
 
 ### Dense Models (GPT, BERT, LLaMA)
 - **AllReduce bandwidth**: >800 GB/s per node
@@ -28,7 +28,7 @@ This guide covers 4 phases of NCCL testing to validate your cluster's communicat
 - **Expert capacity**: Optimal balance found
 - **Network utilization**: >80% of 3.2Tbps EFA
 
-## 📁 Test Files Location
+##  Test Files Location
 
 All test scripts are in `config/nccl/`:
 
@@ -45,7 +45,7 @@ config/nccl/
 └── phase4-optimization-container.sbatch # Phase 4: Container version
 ```
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 
@@ -237,7 +237,7 @@ cat /fsx/nccl-results/phase2_*/phase2-multinode-report.txt
 ```
 Single-node: 1000 GB/s
 2-node:      1800 GB/s
-Efficiency:  1800 / (1000 × 2) = 90% ✓ Good!
+Efficiency:  1800 / (1000 × 2) = 90%  Good!
 
 If efficiency < 80%:
   → Check EFA configuration
@@ -343,7 +343,7 @@ done
 **Choosing optimal expert capacity**:
 ```
 Capacity 64:  250 GB/s, 30us latency  ← Best latency
-Capacity 128: 300 GB/s, 45us latency  ← Balanced ✓
+Capacity 128: 300 GB/s, 45us latency  ← Balanced 
 Capacity 256: 320 GB/s, 80us latency  ← Best bandwidth
 Capacity 512: 330 GB/s, 150us latency ← Too high latency
 
@@ -495,7 +495,7 @@ export NCCL_NVLS_ENABLE=1
 
 ---
 
-## 📊 Results Analysis
+##  Results Analysis
 
 ### Generate Combined Report
 
@@ -545,7 +545,7 @@ Use this checklist to validate your cluster:
 
 ---
 
-## 🔧 Advanced Tuning
+##  Advanced Tuning
 
 ### For Specific Instance Types
 
@@ -594,7 +594,7 @@ cat /fsx/nccl-results/phase1-baseline_*.err | grep -i "error\|warn"
 
 ---
 
-## 📚 Additional Resources
+##  Additional Resources
 
 ### NCCL Documentation
 - [NCCL User Guide](https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/)
@@ -614,14 +614,14 @@ cat /fsx/nccl-results/phase1-baseline_*.err | grep -i "error\|warn"
 
 ---
 
-## 🎯 Summary
+##  Summary
 
 After completing all 4 phases, you should have:
 
-1. ✅ **Validated baseline performance** (Phase 1)
-2. ✅ **Confirmed multi-node scaling** (Phase 2)
-3. ✅ **Optimized for your workload** (Phase 3)
-4. ✅ **Tuned NCCL parameters** (Phase 4)
+1.  **Validated baseline performance** (Phase 1)
+2.  **Confirmed multi-node scaling** (Phase 2)
+3.  **Optimized for your workload** (Phase 3)
+4.  **Tuned NCCL parameters** (Phase 4)
 
 Your cluster is now ready for production training!
 

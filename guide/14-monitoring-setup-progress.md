@@ -11,7 +11,7 @@ ComputeNode 설치는 15-20분 소요되며, 다음 컴포넌트들이 순차적
 6. Node Exporter (1분)
 7. NCCL 설정 (5초, 있는 경우)
 
-## 🔍 모니터링 방법
+##  모니터링 방법
 
 ### 방법 1: 자동 모니터링 스크립트 (권장)
 
@@ -39,7 +39,7 @@ aws logs tail /aws/parallelcluster/p5en-48xlarge-cluster \
 aws logs tail /aws/parallelcluster/p5en-48xlarge-cluster \
   --region us-east-2 \
   --follow \
-  --filter-pattern "\"Installing\" OR \"✓\" OR \"Complete\""
+  --filter-pattern "\"Installing\" OR \"\" OR \"Complete\""
 ```
 
 ### 방법 3: 특정 컴포넌트 설치 확인
@@ -101,7 +101,7 @@ srun --nodes=1 bash /fsx/scripts/check-compute-setup.sh
 srun --nodes=ALL bash /fsx/scripts/check-compute-setup.sh
 ```
 
-## 📊 설치 진행 단계별 로그 메시지
+##  설치 진행 단계별 로그 메시지
 
 ### 1. 초기화 단계
 ```
@@ -109,7 +109,7 @@ srun --nodes=ALL bash /fsx/scripts/check-compute-setup.sh
 Cluster Name: p5en-48xlarge-cluster
 Region: us-east-2
 Checking FSx Lustre mount...
-✓ FSx Lustre mounted at /fsx
+ FSx Lustre mounted at /fsx
 ```
 
 ### 2. 병렬 설치 단계
@@ -123,42 +123,42 @@ Installing CloudWatch Agent...
 ```
 GPU detected - installing with GPU support
 Installed EFA packages:
-✓ EFA installation complete
+ EFA installation complete
 ```
 
 ### 4. Docker 설치
 ```
-✓ Docker + NVIDIA Container Toolkit installation complete
+ Docker + NVIDIA Container Toolkit installation complete
 ```
 
 ### 5. Pyxis 설치
 ```
 Installing Pyxis (Slurm container plugin)...
-✓ Pyxis installation complete
+ Pyxis installation complete
 (또는)
-⚠️  Pyxis build failed (non-critical)
+️  Pyxis build failed (non-critical)
 ```
 
 ### 6. 모니터링 설정
 ```
 Configuring DCGM Exporter...
-✓ DCGM Exporter configured (port 9400)
+ DCGM Exporter configured (port 9400)
 Installing Node Exporter...
-✓ Node Exporter configured (port 9100)
+ Node Exporter configured (port 9100)
 ```
 
 ### 7. NCCL 설정 (있는 경우)
 ```
 Checking for shared NCCL installation...
 Found shared NCCL, configuring environment...
-✓ Shared NCCL configured
+ Shared NCCL configured
 (또는)
-⚠️  Shared NCCL not found in /fsx/nccl/
+️  Shared NCCL not found in /fsx/nccl/
 ```
 
 ### 8. 완료
 ```
-✓ Compute Node Setup Complete
+ Compute Node Setup Complete
 Installed components:
   - EFA Driver + libfabric
   - Docker + NVIDIA Container Toolkit
@@ -168,7 +168,7 @@ Installed components:
   - Node Exporter (port 9100) - System metrics
 ```
 
-## 🚨 문제 발생 시 확인 사항
+##  문제 발생 시 확인 사항
 
 ### 타임아웃 발생 (노드가 shutting-down)
 
@@ -203,14 +203,14 @@ aws logs get-log-events \
 aws logs filter-log-events \
   --log-group-name "/aws/parallelcluster/${CLUSTER_NAME}" \
   --region ${REGION} \
-  --filter-pattern "\"Error\" OR \"Failed\" OR \"❌\" OR \"fatal\"" \
+  --filter-pattern "\"Error\" OR \"Failed\" OR \"\" OR \"fatal\"" \
   --max-items 50
 
 # 경고 메시지 검색
 aws logs filter-log-events \
   --log-group-name "/aws/parallelcluster/${CLUSTER_NAME}" \
   --region ${REGION} \
-  --filter-pattern "\"Warning\" OR \"⚠️\"" \
+  --filter-pattern "\"Warning\" OR \"️\"" \
   --max-items 50
 ```
 
@@ -229,7 +229,7 @@ sudo apt-get install -y docker.io
 sudo systemctl start docker
 ```
 
-## 📈 설치 완료 확인
+##  설치 완료 확인
 
 ### 모든 컴포넌트 확인
 
@@ -248,36 +248,36 @@ Date: Wed Nov 20 07:30:00 UTC 2025
 ========================================
 
 === System Information ===
-OS:                           ✓ Installed
+OS:                            Installed
   PRETTY_NAME="Ubuntu 22.04.3 LTS"
-Kernel:                       ✓ Installed
+Kernel:                        Installed
   6.8.0-1039-aws
 
 === GPU & Drivers ===
-NVIDIA Driver:                ✓ Installed
+NVIDIA Driver:                 Installed
   570.172.08
-CUDA:                         ✓ Installed
+CUDA:                          Installed
   release 12.3
-GPU Count:                    ✓ Installed
+GPU Count:                     Installed
   8
 
 === EFA ===
-EFA Installer:                ✓ Installed
-Libfabric:                    ✓ Installed
-EFA Devices:                  ✓ Installed
+EFA Installer:                 Installed
+Libfabric:                     Installed
+EFA Devices:                   Installed
 
 === Container Runtime ===
-Docker:                       ✓ Installed
+Docker:                        Installed
   Docker version 24.0.5
-NVIDIA Container Toolkit:     ✓ Installed
+NVIDIA Container Toolkit:      Installed
 
 === Monitoring ===
-DCGM Exporter:                ✓ Running
-Node Exporter:                ✓ Running
+DCGM Exporter:                 Running
+Node Exporter:                 Running
 
 === NCCL ===
-NCCL Profile Script:          ✓ Installed
-NCCL Version:                 ✓ Installed
+NCCL Profile Script:           Installed
+NCCL Version:                  Installed
   v2.28.7-1
 
 ========================================
@@ -286,7 +286,7 @@ Setup Summary
 
 Installation Progress: 9/9 components (100%)
 
-✓ All components installed successfully!
+ All components installed successfully!
 ```
 
 ### 개별 컴포넌트 테스트
@@ -307,49 +307,49 @@ srun --nodes=2 --ntasks=2 \
   /opt/amazon/efa/bin/fi_pingpong -p efa
 ```
 
-## 🎯 빠른 체크리스트
+##  빠른 체크리스트
 
 클러스터 생성 후 다음 순서로 확인:
 
-1. ✅ **CloudFormation 스택 상태**
+1.  **CloudFormation 스택 상태**
    ```bash
    aws cloudformation describe-stacks --stack-name ${CLUSTER_NAME} --region ${REGION} --query 'Stacks[0].StackStatus'
    ```
    → `CREATE_COMPLETE` 또는 `CREATE_IN_PROGRESS`
 
-2. ✅ **ComputeNode 인스턴스 상태**
+2.  **ComputeNode 인스턴스 상태**
    ```bash
    aws ec2 describe-instances --filters "Name=tag:Name,Values=Compute" --query 'Reservations[*].Instances[*].State.Name'
    ```
    → `running` (shutting-down이면 타임아웃)
 
-3. ✅ **CloudWatch 로그 확인**
+3.  **CloudWatch 로그 확인**
    ```bash
    aws logs tail /aws/parallelcluster/${CLUSTER_NAME} --region ${REGION} --since 10m
    ```
    → 설치 진행 메시지 확인
 
-4. ✅ **HeadNode에서 Slurm 확인**
+4.  **HeadNode에서 Slurm 확인**
    ```bash
    ssh headnode
    sinfo -N -l
    ```
    → ComputeNode 상태 확인
 
-5. ✅ **설치 상태 확인**
+5.  **설치 상태 확인**
    ```bash
    srun --nodes=1 bash /fsx/scripts/check-compute-setup.sh
    ```
    → 100% 완료 확인
 
-## 📚 관련 문서
+##  관련 문서
 
 - [TIMEOUT-CONFIGURATION.md](TIMEOUT-CONFIGURATION.md) - 타임아웃 설정
 - [config/headnode/README.md](config/headnode/README.md) - NCCL 설치
 - [config/compute/setup-compute-node.sh](config/compute/setup-compute-node.sh) - 설치 스크립트
 - [TROUBLESHOOTING.md](guide/TROUBLESHOOTING.md) - 문제 해결
 
-## 💡 팁
+##  팁
 
 1. **실시간 모니터링**: 클러스터 생성 시작과 동시에 로그 모니터링 시작
 2. **타임아웃 여유**: DevSettings.Timeouts를 충분히 설정 (40분 권장)

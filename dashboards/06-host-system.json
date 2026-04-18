@@ -1,0 +1,258 @@
+{
+  "uid": "p6-host-system",
+  "title": "6. Host System \u2014 CPU / Memory / PSI",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "tags": [
+    "gpu-cluster",
+    "parallelcluster"
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "title": "CPU Utilization per Node (%)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "100 - (avg by (node_name) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "legendFormat": "{{node_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Memory Usage per Node (GiB)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "avg by (node_name) (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 1073741824",
+          "legendFormat": "{{node_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "IO Pressure Stall (%)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (node_name) (rate(node_pressure_io_stalled_seconds_total[5m])) * 100",
+          "legendFormat": "{{node_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "CPU Pressure Stall (%)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (node_name) (rate(node_pressure_cpu_waiting_seconds_total[5m])) * 100",
+          "legendFormat": "{{node_name}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Storage I/O (MiB/s)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "sum by (node_name) (rate(node_disk_read_bytes_total{device=~\"nvme.*\"}[5m])) / 1048576",
+          "legendFormat": "{{node_name}} read",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (node_name) (rate(node_disk_written_bytes_total{device=~\"nvme.*\"}[5m])) / 1048576",
+          "legendFormat": "{{node_name}} write",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "MBs",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Overview",
+      "url": "/d/p6-overview",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Cluster",
+      "url": "/d/p6-cluster-overview",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Job Queue",
+      "url": "/d/p6-job-queue",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "GPU Peer",
+      "url": "/d/p6-gpu-peer",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "EFA/NVLink",
+      "url": "/d/p6-efa-nvlink",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Host System",
+      "url": "/d/p6-host-system",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Z-Score",
+      "url": "/d/p6-zscore",
+      "type": "link",
+      "targetBlank": false
+    }
+  ]
+}

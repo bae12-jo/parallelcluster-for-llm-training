@@ -2,7 +2,7 @@
 
 ParallelCluster HeadNode의 Prometheus가 수집하는 모든 메트릭에 대한 상세 가이드입니다.
 
-## 📊 메트릭 수집 구조
+##  메트릭 수집 구조
 
 ```
 ComputeNode (GPU 모드)
@@ -17,7 +17,7 @@ HeadNode
     └── AMP remote_write (amp-only, amp+amg)
 ```
 
-## 🎮 DCGM Exporter 메트릭 (GPU)
+##  DCGM Exporter 메트릭 (GPU)
 
 **Job Name**: `dcgm`  
 **Port**: 9400  
@@ -117,7 +117,7 @@ DCGM_FI_PROF_NVLINK_RX_BYTES{gpu="0"}
 DCGM_FI_PROF_NVLINK_TX_BYTES{gpu="0"}
 ```
 
-## 🖥️ Node Exporter 메트릭 (시스템)
+## ️ Node Exporter 메트릭 (시스템)
 
 **Job Name**: `compute-nodes`  
 **Port**: 9100  
@@ -251,7 +251,7 @@ rate(node_context_switches_total[5m])
 rate(node_intr_total[5m])
 ```
 
-## 📈 유용한 PromQL 쿼리 예제
+##  유용한 PromQL 쿼리 예제
 
 ### GPU 모니터링
 
@@ -376,7 +376,7 @@ rate(node_cpu_seconds_total{mode="iowait"}[5m]) * 100 > 20
 (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
 ```
 
-## 🎯 Grafana 대시보드 예제
+##  Grafana 대시보드 예제
 
 ### GPU 대시보드 패널
 
@@ -453,7 +453,7 @@ rate(node_network_transmit_bytes_total{device="eth0"}[5m]) * 8 / 1000000
 # Unit: Mbps
 ```
 
-## 📚 메트릭 보존 기간
+##  메트릭 보존 기간
 
 ### Self-hosting
 - **로컬 저장**: 15일 (기본값)
@@ -465,7 +465,7 @@ rate(node_network_transmit_bytes_total{device="eth0"}[5m]) * 8 / 1000000
 - **AMP 저장**: 150일 (자동)
 - **비용**: 저장 용량에 따라 과금
 
-## 🔍 메트릭 확인 방법
+##  메트릭 확인 방법
 
 ### Prometheus UI
 ```bash
@@ -492,17 +492,17 @@ curl 'http://localhost:9090/api/v1/query?query=DCGM_FI_DEV_GPU_UTIL'
 3. Metric browser에서 메트릭 선택
 4. Run query
 
-## 📊 요약
+##  요약
 
 ### GPU 메트릭 (DCGM)
-- ✅ 사용률, 메모리, 온도, 전력
-- ✅ 클럭, PCIe, NVLINK
-- ✅ ECC 에러, XID 에러
+-  사용률, 메모리, 온도, 전력
+-  클럭, PCIe, NVLINK
+-  ECC 에러, XID 에러
 - **총**: ~50개 메트릭
 
 ### 시스템 메트릭 (Node Exporter)
-- ✅ CPU, 메모리, 디스크, 네트워크
-- ✅ 부하, 프로세스, I/O
+-  CPU, 메모리, 디스크, 네트워크
+-  부하, 프로세스, I/O
 - **총**: ~200개 메트릭
 
 ### 수집 주기
