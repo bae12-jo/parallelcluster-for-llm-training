@@ -87,7 +87,7 @@ Scheduling:
           - Policy: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
           - Policy: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
           - Policy: arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
-          - Policy: arn:aws:iam::<ACCOUNT_ID>:policy/pcluster-compute-node-tagging  # required for slurm:hostname EC2 tag (Prometheus node_name label)
+          - Policy: <COMPUTE_TAGGING_POLICY_ARN>  # auto-populated from CFn output ComputeNodeTaggingPolicyArn
       JobExclusiveAllocation: true
       ComputeResources:
         - Name: gpu-nodes

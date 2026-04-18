@@ -104,6 +104,7 @@ COMPUTE_SG=$(get_output ComputeNodeSGId)
 LOGIN_SG=$(get_output LoginNodeSGId)
 FSX_ID=$(get_output FSxLustreFilesystemId)
 GRAFANA_URL=$(get_output GrafanaURL)
+COMPUTE_TAGGING_POLICY_ARN=$(get_output ComputeNodeTaggingPolicyArn)
 
 echo
 echo "  GrafanaURL : ${GRAFANA_URL}"

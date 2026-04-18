@@ -1367,6 +1367,24 @@ Resources:
         - !Ref MonitoringInstanceRole
 
 
+  # IAM Managed Policy for compute nodes to tag themselves (slurm:hostname → Prometheus node_name label)
+  ComputeNodeTaggingPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-compute-node-tagging
+      Description: Allow compute nodes to tag themselves with slurm:hostname for Prometheus node_name relabeling
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - ec2:CreateTags
+            Resource: !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
+            Condition:
+              StringEquals:
+                ec2:ResourceTag/parallelcluster:node-type: Compute
+
+
 #############
 ## Outputs ##
 #############
@@ -1567,3 +1585,9 @@ Outputs:
     Description: CloudFormation stack name (for querying outputs in setup scripts)
     Export:
       Name: !Sub ${AWS::StackName}-StackName
+
+  ComputeNodeTaggingPolicyArn:
+    Value: !Ref ComputeNodeTaggingPolicy
+    Description: IAM policy ARN for compute node EC2 tagging (use in cluster-config AdditionalIamPolicies)
+    Export:
+      Name: !Sub ${AWS::StackName}-ComputeNodeTaggingPolicyArn
