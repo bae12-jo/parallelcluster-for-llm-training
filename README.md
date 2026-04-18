@@ -54,7 +54,9 @@ Self-contained setup for distributed training clusters on AWS ParallelCluster, w
 │   ├── 08-prometheus-metrics.md
 │   └── ... (16 guides total, see guide/README.md)
 │
-├── config/                              Legacy reference scripts (superseded by scripts/)
+├── config/
+│   ├── headnode/                        HeadNode utilities: NCCL-to-FSx install, NGC download, kernel update disable
+│   └── nccl/                           NCCL test sbatch scripts (phase1–4) + shared install scripts
 ├── security-best-practices/             Security hardening and access guides
 └── img/                                 Architecture diagrams
 ```
