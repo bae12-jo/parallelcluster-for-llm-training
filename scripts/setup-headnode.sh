@@ -96,7 +96,7 @@ export HOME=/root
 export GOPATH=/root/go
 export GOMODCACHE=/root/go/pkg/mod
 export GOCACHE=/root/.cache/go-build
-export PATH=$PATH:/usr/local/go/bin
+export PATH=/usr/local/go/bin:$PATH
 
 GO_VERSION="1.23.1"
 SLURM_EXPORTER_VERSION="1.8.0"
@@ -104,16 +104,16 @@ SLURM_EXPORTER_VERSION="1.8.0"
 apt-get install -y git -qq 2>/dev/null || true
 mkdir -p "${GOPATH}" "${GOCACHE}"
 
-# Always remove old Go and reinstall to avoid version mismatch
-rm -rf /usr/local/go
-if true; then
-  curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -xz -C /usr/local
-fi
+# Always remove old Go (including system-installed) to avoid PATH conflicts
+rm -rf /usr/local/go /usr/lib/go-* /usr/bin/go /usr/bin/gofmt 2>/dev/null || true
+curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -xz -C /usr/local
+hash -r
 
 rm -rf /tmp/pse
 git clone --depth 1 --branch "v${SLURM_EXPORTER_VERSION}" \
   https://github.com/rivosinc/prometheus-slurm-exporter.git /tmp/pse
 cd /tmp/pse
+sed -i 's/^go [0-9]\+\.[0-9]\+\.[0-9]\+/go 1.23/' go.mod
 go build -o /usr/local/bin/slurm_exporter .
 chmod +x /usr/local/bin/slurm_exporter
 
@@ -174,6 +174,47 @@ ${AWS_CLI} ec2 create-tags --region "${REGION}" --resources "${INSTANCE_ID}" \
   --tags Key=parallelcluster:node-type,Value=HeadNode \
          Key=slurm:hostname,Value=headnode 2>/dev/null || true
 
+# ---- Compute node hostname tagger (cron backup) ----
+# Compute nodes tag themselves at boot, but Slurm hostname may not be assigned in time.
+# This cron runs every 5 minutes from HeadNode and tags any compute node missing slurm:hostname.
+AWS_CLI_PATH=$(command -v aws || echo /usr/local/bin/aws)
+cat > /usr/local/bin/tag-compute-nodes.sh << TAGSCRIPT
+#!/bin/bash
+# Tag compute nodes with slurm:hostname if not already tagged
+# Runs from HeadNode where slurmctld knows all node hostnames
+AWS_CLI=\$(command -v aws || echo /usr/local/bin/aws)
+REGION=\$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
+CLUSTER_NAME=\$(cat /etc/parallelcluster/cfnconfig 2>/dev/null | grep "^stack_name" | cut -d= -f2 | tr -d ' ' || echo "")
+
+# Get all running compute instances in this cluster without slurm:hostname tag
+INSTANCES=\$(\${AWS_CLI} ec2 describe-instances --region "\${REGION}" \
+  --filters "Name=tag:parallelcluster:node-type,Values=Compute" \
+            "Name=instance-state-name,Values=running" \
+  --query 'Reservations[].Instances[?!Tags[?Key==\`slurm:hostname\`]].[InstanceId,PrivateIpAddress]' \
+  --output text 2>/dev/null)
+
+[ -z "\${INSTANCES}" ] && exit 0
+
+# Match instance private IP to Slurm nodelist
+while IFS=$'\t' read -r INSTANCE_ID PRIVATE_IP; do
+  [ -z "\${INSTANCE_ID}" ] && continue
+  # Find Slurm hostname by private IP via sinfo
+  SLURM_HOST=\$(sinfo -h -o "%N %o" 2>/dev/null | awk -v ip="\${PRIVATE_IP}" '\$2==ip {print \$1}' | head -1)
+  if [ -n "\${SLURM_HOST}" ]; then
+    \${AWS_CLI} ec2 create-tags --region "\${REGION}" --resources "\${INSTANCE_ID}" \
+      --tags "Key=slurm:hostname,Value=\${SLURM_HOST}" "Key=Name,Value=\${SLURM_HOST}" 2>/dev/null && \
+      echo "Tagged \${INSTANCE_ID} (\${PRIVATE_IP}) -> \${SLURM_HOST}"
+  fi
+done <<< "\${INSTANCES}"
+TAGSCRIPT
+chmod +x /usr/local/bin/tag-compute-nodes.sh
+
+# Register cron: run every 5 minutes
+cat > /etc/cron.d/tag-compute-nodes << 'CRONEOF'
+*/5 * * * * root /usr/local/bin/tag-compute-nodes.sh >> /var/log/tag-compute-nodes.log 2>&1
+CRONEOF
+
 echo "=== HeadNode monitoring setup complete ==="
 echo "  node_exporter : :9100"
 echo "  slurm_exporter: :8080 (installing in background, ~10min)"
+echo "  compute tagging: cron every 5min via /usr/local/bin/tag-compute-nodes.sh"
