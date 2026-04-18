@@ -176,6 +176,11 @@ DCGM Exporter 4.5.2 supports A10G, H100, H200, B200, GB200.
 
 Prometheus uses EC2 service discovery via `parallelcluster:cluster-name` and `slurm:hostname` tags — no manual target configuration needed.
 
+Node labels in Grafana (`node_name`) follow the pattern `<slurm-hostname> (<private-ip>)` (e.g. `gpu-st-gpu-nodes-1 (10.1.8.130)`).
+This requires compute nodes to have the `slurm:hostname` EC2 tag, which is applied automatically at boot by `setup-compute-node.sh`.
+The tag requires `ec2:CreateTags` permission — provided by the `ComputeNodeTaggingPolicy` created by the CloudFormation stack and wired into the cluster config via `deploy-cluster-stack.sh`.
+If the tag is missing, `node_name` falls back to the private IP only.
+
 ### AWS Managed (amp-only / amp+amg mode)
 
 See [guide/06-amp-amg-setup.md](guide/06-amp-amg-setup.md).
@@ -238,6 +243,12 @@ aws cloudformation describe-stack-events --stack-name gpu-cluster-for-ml \
 ```
 
 For detailed troubleshooting, see the [guide/](guide/) directory.
+
+**node_name shows IP only (no hostname) in Grafana**
+The `slurm:hostname` EC2 tag is missing on compute nodes. Causes:
+- `ec2:CreateTags` permission not granted — check that `ComputeNodeTaggingPolicy` is attached to the compute node IAM role (deployed by CFn, wired by `deploy-cluster-stack.sh`)
+- Slurm hostname not yet assigned at tag time — `tag-slurm-hostname.service` retries for 5 minutes after boot; check `journalctl -u tag-slurm-hostname` on the compute node
+- IMDSv2 token not used — if `ImdsSupport: v2.0` is set, the tagging script must use a token to query instance metadata
 
 ---
 
