@@ -157,9 +157,6 @@ Import dashboards:
 
 ## Monitoring
 
-Choosing the right AMI and container image combination matters — CUDA driver version on the AMI must be compatible with the CUDA version inside the container.
-Use **[AWS ML Infra Info](https://ml-infra.csbailey.people.aws.dev/info/)** to look up current AMI versions (DLAMI, pcluster official), NGC/DLC container SW stacks, and run a compatibility check before deploying.
-
 ### Self-hosted (self-hosting mode)
 
 Deployed automatically when `MonitoringType=self-hosting`:
@@ -172,9 +169,6 @@ Deployed automatically when `MonitoringType=self-hosting`:
 | node_exporter | v1.11.1 | 9100 (all nodes) |
 | slurm_exporter | v1.8.0 | 8080 (head node) |
 
-The monitoring instance uses **Ubuntu 22.04 LTS**, resolved at deploy time via SSM:
-`/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id`
-This always resolves to the latest Ubuntu 22.04 AMI in the target region (no hardcoded AMI ID).
 
 DCGM Exporter 4.5.2 supports A10G, H100, H200, B200, GB200.
 
@@ -195,7 +189,14 @@ For connection methods and security recommendations, see [Security Best Practice
 
 ## Software Installation on Cluster Nodes
 
-Three approaches for installing GPU software (NCCL, frameworks, etc.):
+Before choosing an AMI and container image, verify that the CUDA driver version on the AMI is compatible with the CUDA version inside the container.
+**[AWS ML Infra Info](https://ml-infra.csbailey.people.aws.dev/info/)** shows current AMI versions (pcluster official, DLAMI), NGC/DLC container SW stacks, and runs a compatibility check.
+
+The monitoring instance AMI is resolved dynamically at deploy time:
+`/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id`
+(always the latest Ubuntu 22.04 in the target region — no hardcoded AMI ID).
+
+Three approaches for installing GPU software (NCCL, frameworks, etc.) on cluster nodes:
 
 **Option A: CustomActions (OnNodeConfigured)**
 Scripts run automatically at cluster creation. Good for drivers and lightweight installs.
