@@ -151,10 +151,16 @@ if systemctl list-unit-files nvidia-fabricmanager.service &>/dev/null; then
 fi
 
 # ---- DCGM exporter 4.5.2-4.8.1 ----
-# Full Blackwell B200 support: NVLink-5, HBM3e, Transformer Engine, XID errors
+# Pull + start via post-boot oneshot so it doesn't block OnNodeConfigured timeout
 if ! systemctl is-active --quiet dcgm-exporter; then
-  # Pull image
-  docker pull "${DCGM_EXPORTER_IMAGE}"
+  # Write start script — actual docker pull happens in background after cfn-signal
+  cat > /usr/local/bin/start-dcgm-exporter.sh << DCGMEOF
+#!/bin/bash
+DCGM_EXPORTER_IMAGE="${DCGM_EXPORTER_IMAGE}"
+docker pull "\${DCGM_EXPORTER_IMAGE}" 2>&1 | logger -t dcgm-pull
+systemctl start dcgm-exporter
+DCGMEOF
+  chmod +x /usr/local/bin/start-dcgm-exporter.sh
 
   cat > /etc/systemd/system/dcgm-exporter.service <<EOF
 [Unit]
@@ -181,9 +187,28 @@ ExecStop=/usr/bin/docker stop dcgm-exporter
 WantedBy=multi-user.target
 EOF
 
+  cat > /etc/systemd/system/dcgm-pull.service <<EOF
+[Unit]
+Description=Pull DCGM exporter image and start service
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/start-dcgm-exporter.sh
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
   systemctl daemon-reload
-  systemctl enable --now dcgm-exporter
-  echo "DCGM exporter started on :9400"
+  systemctl enable dcgm-exporter
+  systemctl enable dcgm-pull.service
+  systemctl start dcgm-pull.service &
+  echo "DCGM pull queued in background (~2min)"
 fi
 
 # Tag instance for Prometheus EC2 SD
