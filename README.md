@@ -54,7 +54,7 @@ Self-contained setup for distributed training clusters on AWS ParallelCluster, w
 │   ├── 08-prometheus-metrics.md
 │   └── ... (16 guides total, see guide/README.md)
 │
-├── config/                              Node init scripts and component configs
+├── config/                              Legacy reference scripts (superseded by scripts/)
 ├── security-best-practices/             Security hardening and access guides
 └── img/                                 Architecture diagrams
 ```
@@ -75,11 +75,11 @@ Self-contained setup for distributed training clusters on AWS ParallelCluster, w
 ### 1. Set environment variables
 
 ```bash
-export S3_BUCKET=my-pcluster-bucket
+export S3_BUCKET=my-cluster-script-bucket
 export KEY_PAIR=my-ec2-keypair
 export GRAFANA_PASS=changeme
-export AWS_PROFILE=default    # optional
-export REGION=us-east-1       # optional
+export AWS_PROFILE=default
+export REGION=us-east-1
 ```
 
 ### 2. Upload scripts and dashboards to S3
@@ -157,6 +157,9 @@ Import dashboards:
 
 ## Monitoring
 
+Choosing the right AMI and container image combination matters — CUDA driver version on the AMI must be compatible with the CUDA version inside the container.
+Use **[AWS ML Infra Info](https://ml-infra.csbailey.people.aws.dev/info/)** to look up current AMI versions (DLAMI, pcluster official), NGC/DLC container SW stacks, and run a compatibility check before deploying.
+
 ### Self-hosted (self-hosting mode)
 
 Deployed automatically when `MonitoringType=self-hosting`:
@@ -205,11 +208,11 @@ Use NGC containers via Pyxis/Enroot. Fastest iteration for framework changes.
 
 ## Performance Reference
 
-| Instance | GPU | NVLink BW | EFA BW | Multi-node scaling |
-|----------|-----|-----------|--------|-------------------|
-| p5.48xlarge | H100 x8 SXM | 900 GB/s | 3.2 Tbps | >90% |
-| p5en.48xlarge | H200 x8 SXM | 900 GB/s | 3.2 Tbps | >90% |
-| p6-b200.48xlarge | B200 x8 | 1800 GB/s | 3.2 Tbps | >90% |
+| Instance | GPU | NVSwitch BW | EFA BW | GPU Memory |
+|----------|-----|-------------|--------|------------|
+| p5.48xlarge | H100 x8 SXM | 900 GB/s | 3.2 Tbps | 640 GB HBM3 |
+| p5e/p5en.48xlarge | H200 x8 SXM | 900 GB/s | 3.2 Tbps | 1128 GB HBM3e |
+| p6-b200.48xlarge | B200 x8 | 900 GB/s | 3.2 Tbps | 1440 GB HBM3e |
 
 ---
 
