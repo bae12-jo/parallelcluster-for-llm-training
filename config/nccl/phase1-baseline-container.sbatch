@@ -58,7 +58,7 @@ srun --container-image=$CONTAINER_IMAGE \
     | tee $RESULT_DIR/allreduce-dense.log
 
 echo ""
-echo "✓ AllReduce test completed"
+echo " AllReduce test completed"
 echo ""
 
 # Test 2: AllToAll (MoE Model - Expert Routing)
@@ -77,7 +77,7 @@ srun --container-image=$CONTAINER_IMAGE \
     | tee $RESULT_DIR/alltoall-moe.log
 
 echo ""
-echo "✓ AllToAll test completed"
+echo " AllToAll test completed"
 echo ""
 
 # Generate baseline report
@@ -125,13 +125,13 @@ cat >> $REPORT_FILE << EOF
 === Performance Targets ===
 
 Dense Model (AllReduce):
-  ✓ Target: >800 GB/s for 1GB messages
-  ✓ Expected: 800-1200 GB/s (single node)
+   Target: >800 GB/s for 1GB messages
+   Expected: 800-1200 GB/s (single node)
   
 MoE Model (AllToAll):
-  ✓ Target: >200 GB/s for 128MB messages
-  ✓ Latency: <100us for 8MB messages
-  ✓ Expected: 200-400 GB/s (single node)
+   Target: >200 GB/s for 128MB messages
+   Latency: <100us for 8MB messages
+   Expected: 200-400 GB/s (single node)
 
 === Container Info ===
   - NCCL version: Built into NGC container

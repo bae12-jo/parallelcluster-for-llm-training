@@ -13,7 +13,7 @@ echo "=========================================="
 
 # Check if NCCL is installed
 if [ ! -f "/fsx/nccl/setup-nccl-env.sh" ]; then
-    echo "❌ Error: NCCL not found in /fsx/nccl/"
+    echo " Error: NCCL not found in /fsx/nccl/"
     echo ""
     echo "Please install NCCL first:"
     echo "  sudo bash /fsx/nccl/install-nccl-shared.sh v2.28.7-1 v1.17.2-aws /fsx"
@@ -21,13 +21,13 @@ if [ ! -f "/fsx/nccl/setup-nccl-env.sh" ]; then
 fi
 
 NCCL_VERSION=$(cat /fsx/nccl/.nccl_version 2>/dev/null || echo "unknown")
-echo "✓ Found NCCL installation: ${NCCL_VERSION}"
+echo " Found NCCL installation: ${NCCL_VERSION}"
 echo ""
 
 # Check if there are any compute nodes
 NODE_COUNT=$(sinfo -N -h -o "%N" -p compute-gpu 2>/dev/null | wc -l)
 if [ "$NODE_COUNT" -eq 0 ]; then
-    echo "⚠️  No ComputeNodes are currently running"
+    echo "️  No ComputeNodes are currently running"
     echo ""
     echo "NCCL will be automatically configured when nodes start."
     echo "You can start nodes by submitting a Slurm job:"
@@ -61,15 +61,15 @@ EOF
     
     # Verify
     if [ -n "$LD_LIBRARY_PATH" ] && echo "$LD_LIBRARY_PATH" | grep -q "/usr/local/lib"; then
-        echo "✓ NCCL configured on $(hostname)"
+        echo " NCCL configured on $(hostname)"
     else
-        echo "⚠️  NCCL configuration may have failed on $(hostname)"
+        echo "️  NCCL configuration may have failed on $(hostname)"
     fi
 '
 
 echo ""
 echo "=========================================="
-echo "✓ NCCL Configuration Applied"
+echo " NCCL Configuration Applied"
 echo "=========================================="
 echo ""
 echo "NCCL is now available on all running ComputeNodes."

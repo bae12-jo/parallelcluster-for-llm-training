@@ -107,7 +107,7 @@ def send_to_cloudwatch(metric_data):
             Namespace=f'ParallelCluster/{CLUSTER_NAME}/GPU',
             MetricData=metric_data
         )
-        print(f"✓ Sent {len(metric_data)} metrics to CloudWatch")
+        print(f" Sent {len(metric_data)} metrics to CloudWatch")
     except Exception as e:
         print(f"Error sending to CloudWatch: {e}")
 
@@ -202,7 +202,7 @@ systemctl enable dcgm-cloudwatch-exporter
 systemctl start dcgm-cloudwatch-exporter
 
 echo ""
-echo "✓ DCGM to CloudWatch Exporter installed"
+echo " DCGM to CloudWatch Exporter installed"
 echo "  - Service: dcgm-cloudwatch-exporter"
 echo "  - Logs: journalctl -u dcgm-cloudwatch-exporter -f"
 echo "  - Namespace: ParallelCluster/${CLUSTER_NAME}/GPU"

@@ -19,10 +19,10 @@ if lsmod | grep -q lustre; then
     echo "Loaded Lustre module: ${LOADED_VERSION}"
     
     if [ "${LOADED_VERSION}" = "${KERNEL_VERSION}" ]; then
-        echo "✓ Lustre module matches kernel version"
+        echo " Lustre module matches kernel version"
         exit 0
     else
-        echo "⚠️  Lustre module version mismatch!"
+        echo "️  Lustre module version mismatch!"
         echo "   Kernel: ${KERNEL_VERSION}"
         echo "   Module: ${LOADED_VERSION}"
         echo "   Unloading old module..."
@@ -32,7 +32,7 @@ fi
 
 # Check if matching Lustre module is installed
 if [ -d "/lib/modules/${KERNEL_VERSION}/updates/kernel/fs/lustre" ]; then
-    echo "✓ Lustre module for ${KERNEL_VERSION} is installed"
+    echo " Lustre module for ${KERNEL_VERSION} is installed"
 else
     echo "Installing Lustre client module for ${KERNEL_VERSION}..."
     
@@ -41,9 +41,9 @@ else
     
     # Install matching Lustre module
     if apt-get install -y lustre-client-modules-${KERNEL_VERSION}; then
-        echo "✓ Lustre module installed successfully"
+        echo " Lustre module installed successfully"
     else
-        echo "❌ Failed to install Lustre module"
+        echo " Failed to install Lustre module"
         echo "Available modules:"
         apt-cache search lustre-client-modules | grep ${KERNEL_VERSION%-*}
         exit 1
@@ -53,24 +53,24 @@ fi
 # Load Lustre module
 echo "Loading Lustre module..."
 if modprobe lustre; then
-    echo "✓ Lustre module loaded successfully"
+    echo " Lustre module loaded successfully"
 else
-    echo "❌ Failed to load Lustre module"
+    echo " Failed to load Lustre module"
     exit 1
 fi
 
 # Verify /fsx mount
 if mountpoint -q /fsx; then
-    echo "✓ /fsx is mounted"
+    echo " /fsx is mounted"
 else
-    echo "⚠️  /fsx is not mounted, attempting to mount..."
+    echo "️  /fsx is not mounted, attempting to mount..."
     systemctl restart fsx.mount
     sleep 2
     
     if mountpoint -q /fsx; then
-        echo "✓ /fsx mounted successfully"
+        echo " /fsx mounted successfully"
     else
-        echo "❌ Failed to mount /fsx"
+        echo " Failed to mount /fsx"
         systemctl status fsx.mount
         exit 1
     fi

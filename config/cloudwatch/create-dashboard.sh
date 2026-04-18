@@ -32,7 +32,7 @@ HEAD_NODE_ID=$(aws ec2 describe-instances \
     --output text 2>/dev/null || echo "")
 
 if [ -z "$HEAD_NODE_ID" ] || [ "$HEAD_NODE_ID" = "None" ]; then
-    echo "⚠️  Warning: HeadNode not found. Dashboard will be created but may show no data."
+    echo "️  Warning: HeadNode not found. Dashboard will be created but may show no data."
     HEAD_NODE_ID="i-placeholder"
 fi
 
@@ -279,14 +279,14 @@ aws cloudwatch put-dashboard \
 rm -f /tmp/dashboard-${CLUSTER_NAME}.json
 
 echo ""
-echo "✓ Dashboard created successfully!"
+echo " Dashboard created successfully!"
 echo ""
 echo "Dashboard URL:"
 echo "https://console.aws.amazon.com/cloudwatch/home?region=${AWS_REGION}#dashboards:name=${DASHBOARD_NAME}"
 echo ""
 echo "Dashboard includes:"
-echo "  ✓ CPU/Memory/Disk usage across all nodes"
-echo "  ✓ Network and FSx Lustre I/O metrics"
-echo "  ✓ Slurm job logs (resume/suspend/errors)"
-echo "  ✓ GPU monitoring (DCGM logs)"
-echo "  ✓ Cluster management logs"
+echo "   CPU/Memory/Disk usage across all nodes"
+echo "   Network and FSx Lustre I/O metrics"
+echo "   Slurm job logs (resume/suspend/errors)"
+echo "   GPU monitoring (DCGM logs)"
+echo "   Cluster management logs"

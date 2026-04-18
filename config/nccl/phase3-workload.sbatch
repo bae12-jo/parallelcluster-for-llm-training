@@ -83,11 +83,11 @@ for capacity in 64 128 256 512; do
         -b $msg_size -e $msg_size_end -f 2 -g 1 -c 1 -n 50 \
         > $RESULT_DIR/moe-capacity-${capacity}.log 2>&1
     
-    echo "  ✓ Capacity $capacity completed"
+    echo "   Capacity $capacity completed"
 done
 
 echo ""
-echo "✓ Expert capacity sweep completed"
+echo " Expert capacity sweep completed"
 echo ""
 
 # Test 2: Latency-Sensitive Operations (Small Messages)
@@ -106,7 +106,7 @@ srun --mpi=pmix \
     | tee $RESULT_DIR/latency-sensitive.log
 
 echo ""
-echo "✓ Latency test completed"
+echo " Latency test completed"
 echo ""
 
 # Test 3: Bandwidth-Sensitive Operations (Large Messages)
@@ -125,7 +125,7 @@ srun --mpi=pmix \
     | tee $RESULT_DIR/bandwidth-sensitive.log
 
 echo ""
-echo "✓ Bandwidth test completed"
+echo " Bandwidth test completed"
 echo ""
 
 # Test 4: Bi-directional Bandwidth (Realistic Training)
@@ -143,7 +143,7 @@ srun --mpi=pmix \
     | tee $RESULT_DIR/bidirectional.log
 
 echo ""
-echo "✓ Bi-directional test completed"
+echo " Bi-directional test completed"
 echo ""
 
 # Test 5: Mixed Pattern (MoE Training Simulation)
@@ -181,7 +181,7 @@ srun --mpi=pmix \
     > $RESULT_DIR/mixed-allreduce.log 2>&1
 
 echo ""
-echo "✓ Mixed pattern test completed"
+echo " Mixed pattern test completed"
 echo ""
 
 # Generate workload report
@@ -280,11 +280,11 @@ cat >> $REPORT_FILE << EOF
 
 === Performance Checklist ===
 
-✓ Bus Bandwidth: Should be >90% of theoretical peak
-✓ AllToAll Latency: <50us for small messages (MoE critical)
-✓ AllReduce Bandwidth: >800 GB/s for large messages
-✓ Network Utilization: >80% of 3.2Tbps EFA
-✓ Scaling Efficiency: >90% across nodes
+ Bus Bandwidth: Should be >90% of theoretical peak
+ AllToAll Latency: <50us for small messages (MoE critical)
+ AllReduce Bandwidth: >800 GB/s for large messages
+ Network Utilization: >80% of 3.2Tbps EFA
+ Scaling Efficiency: >90% across nodes
 
 === MoE Model Recommendations ===
 

@@ -83,7 +83,7 @@ systemctl enable prometheus-cloudwatch-exporter
 systemctl start prometheus-cloudwatch-exporter
 
 echo ""
-echo "✓ Prometheus CloudWatch Exporter installed"
+echo " Prometheus CloudWatch Exporter installed"
 echo "  - Port: 9106 (metrics endpoint)"
 echo "  - Config: /etc/prometheus-cloudwatch-exporter.yml"
 echo "  - Service: prometheus-cloudwatch-exporter"

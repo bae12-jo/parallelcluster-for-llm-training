@@ -60,7 +60,7 @@ srun --container-image=$CONTAINER_IMAGE \
     | tee $RESULT_DIR/allreduce-multinode.log
 
 echo ""
-echo "✓ Multi-node AllReduce test completed"
+echo " Multi-node AllReduce test completed"
 echo ""
 
 # Test 2: Multi-node AllToAll (MoE Expert Parallel Scaling)
@@ -79,7 +79,7 @@ srun --container-image=$CONTAINER_IMAGE \
     | tee $RESULT_DIR/alltoall-multinode.log
 
 echo ""
-echo "✓ Multi-node AllToAll test completed"
+echo " Multi-node AllToAll test completed"
 echo ""
 
 # Test 3: Ring vs Tree Algorithm Comparison
@@ -109,7 +109,7 @@ srun --container-image=$CONTAINER_IMAGE \
     | tee $RESULT_DIR/allreduce-tree.log
 
 echo ""
-echo "✓ Algorithm comparison completed"
+echo " Algorithm comparison completed"
 echo ""
 
 # Generate scaling report
@@ -192,14 +192,14 @@ For MoE models:
 === Performance Targets ===
 
 Dense Model (AllReduce):
-  ✓ Target: >90% scaling efficiency
-  ✓ 2-node: >1600 GB/s aggregate
-  ✓ 4-node: >3200 GB/s aggregate
+   Target: >90% scaling efficiency
+   2-node: >1600 GB/s aggregate
+   4-node: >3200 GB/s aggregate
   
 MoE Model (AllToAll):
-  ✓ Target: >300 GB/s per node
-  ✓ Latency increase: <20us vs single-node
-  ✓ Network utilization: >80% of 3.2Tbps
+   Target: >300 GB/s per node
+   Latency increase: <20us vs single-node
+   Network utilization: >80% of 3.2Tbps
 
 === Next Steps ===
 

@@ -25,7 +25,7 @@ EOF
 
 chmod 644 /etc/cron.d/slurm-metrics
 
-echo "✓ Slurm metrics collector installed"
+echo " Slurm metrics collector installed"
 echo "  - Script: /usr/local/bin/slurm-metrics-collector.sh"
 echo "  - Cron: /etc/cron.d/slurm-metrics (runs every minute)"
 echo "  - Logs: /var/log/slurm-metrics.log"

@@ -27,7 +27,7 @@ echo "=========================================="
 
 # Check if shared directory exists
 if [ ! -d "${SHARED_DIR}" ]; then
-    echo "⚠️  Warning: Shared directory ${SHARED_DIR} does not exist"
+    echo "️  Warning: Shared directory ${SHARED_DIR} does not exist"
     echo "   NCCL will be installed locally instead"
     NCCL_INSTALL_DIR="/opt/nccl"
 fi
@@ -36,11 +36,11 @@ fi
 if [ -f "${NCCL_VERSION_FILE}" ]; then
     INSTALLED_VERSION=$(cat "${NCCL_VERSION_FILE}")
     if [ "${INSTALLED_VERSION}" = "${NCCL_VERSION}-${AWS_OFI_NCCL_VERSION}" ]; then
-        echo "✓ NCCL ${NCCL_VERSION} with AWS OFI ${AWS_OFI_NCCL_VERSION} is already installed"
+        echo " NCCL ${NCCL_VERSION} with AWS OFI ${AWS_OFI_NCCL_VERSION} is already installed"
         echo "   Location: ${NCCL_INSTALL_DIR}"
         exit 0
     else
-        echo "⚠️  Different NCCL version found: ${INSTALLED_VERSION}"
+        echo "️  Different NCCL version found: ${INSTALLED_VERSION}"
         echo "   Reinstalling with ${NCCL_VERSION}-${AWS_OFI_NCCL_VERSION}"
     fi
 fi
@@ -79,11 +79,11 @@ for script in test-nccl-simple.py test-nccl-bandwidth.py example-training-job.py
     if [ -f "${SCRIPT_DIR}/${script}" ]; then
         cp "${SCRIPT_DIR}/${script}" "${NCCL_INSTALL_DIR}/"
         chmod +x "${NCCL_INSTALL_DIR}/${script}"
-        echo "  ✓ Copied ${script}"
+        echo "   Copied ${script}"
     elif [ -f "/tmp/${script}" ]; then
         cp "/tmp/${script}" "${NCCL_INSTALL_DIR}/"
         chmod +x "${NCCL_INSTALL_DIR}/${script}"
-        echo "  ✓ Copied ${script}"
+        echo "   Copied ${script}"
     fi
 done
 
@@ -127,7 +127,7 @@ export NCCL_DEBUG=INFO
 export NCCL_ALGO=Ring
 export NCCL_MIN_NRINGS=8
 
-echo "✓ NCCL environment configured"
+echo " NCCL environment configured"
 echo "  NCCL Version: $(cat /fsx/nccl/.nccl_version 2>/dev/null || echo 'unknown')"
 ENVSCRIPT
 
@@ -138,7 +138,7 @@ rm -f "${NCCL_INSTALL_DIR}/.installing"
 
 echo ""
 echo "=========================================="
-echo "✓ NCCL Installation Complete"
+echo " NCCL Installation Complete"
 echo "=========================================="
 echo "Installation Directory: ${NCCL_INSTALL_DIR}"
 echo "Version: ${NCCL_VERSION}-${AWS_OFI_NCCL_VERSION}"

@@ -68,9 +68,9 @@ sbatch phase1-baseline.sbatch
 ```
 
 **What to check**:
-- ✓ AllReduce: >800 GB/s for 1GB messages
-- ✓ AllToAll: >200 GB/s for 128MB messages
-- ✓ AllToAll latency: <100us for 8MB messages
+-  AllReduce: >800 GB/s for 1GB messages
+-  AllToAll: >200 GB/s for 128MB messages
+-  AllToAll latency: <100us for 8MB messages
 
 **Output**: `/fsx/nccl-results/phase1_<timestamp>/`
 
@@ -96,9 +96,9 @@ sbatch phase2-multinode.sbatch
 ```
 
 **What to check**:
-- ✓ Scaling efficiency: >90%
-- ✓ Network utilization: >80% of 3.2Tbps
-- ✓ Inter-node latency: <20us overhead
+-  Scaling efficiency: >90%
+-  Network utilization: >80% of 3.2Tbps
+-  Inter-node latency: <20us overhead
 
 **Output**: `/fsx/nccl-results/phase2_<timestamp>/`
 
@@ -126,10 +126,10 @@ sbatch phase3-workload.sbatch
 ```
 
 **What to check**:
-- ✓ Optimal expert capacity for your cluster
-- ✓ Small message latency: <50us
-- ✓ Large message bandwidth: >800 GB/s
-- ✓ Mixed pattern performance
+-  Optimal expert capacity for your cluster
+-  Small message latency: <50us
+-  Large message bandwidth: >800 GB/s
+-  Mixed pattern performance
 
 **Output**: `/fsx/nccl-results/phase3_<timestamp>/`
 
@@ -156,10 +156,10 @@ sbatch phase4-optimization.sbatch
 ```
 
 **What to check**:
-- ✓ Best protocol for your workload
-- ✓ Optimal buffer size
-- ✓ Optimal channel count
-- ✓ EFA optimization gains (5-10%)
+-  Best protocol for your workload
+-  Optimal buffer size
+-  Optimal channel count
+-  EFA optimization gains (5-10%)
 
 **Output**: `/fsx/nccl-results/phase4_<timestamp>/`
 

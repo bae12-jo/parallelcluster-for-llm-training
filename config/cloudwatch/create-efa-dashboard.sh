@@ -30,7 +30,7 @@ cat > /tmp/efa-dashboard.json <<EOF
       "width": 24,
       "height": 1,
       "properties": {
-        "markdown": "## 🌐 EFA Network Performance - ${CLUSTER_NAME}\n\nReal-time monitoring of Elastic Fabric Adapter (EFA) network performance for inter-node communication."
+        "markdown": "##  EFA Network Performance - ${CLUSTER_NAME}\n\nReal-time monitoring of Elastic Fabric Adapter (EFA) network performance for inter-node communication."
       }
     },
     {
@@ -217,7 +217,7 @@ cat > /tmp/efa-dashboard.json <<EOF
       "width": 24,
       "height": 2,
       "properties": {
-        "markdown": "### 📊 Metrics Guide\n\n- **Throughput**: Actual data transfer rate (should approach EFA max during training)\n- **Packet Rate**: Number of packets per second (higher for small messages)\n- **Errors/Discards**: Should be zero under normal operation\n- **EFA Max**: p5en.48xlarge = 3200 Gbps (400 GB/s), p4d.24xlarge = 400 Gbps (50 GB/s)"
+        "markdown": "###  Metrics Guide\n\n- **Throughput**: Actual data transfer rate (should approach EFA max during training)\n- **Packet Rate**: Number of packets per second (higher for small messages)\n- **Errors/Discards**: Should be zero under normal operation\n- **EFA Max**: p5en.48xlarge = 3200 Gbps (400 GB/s), p4d.24xlarge = 400 Gbps (50 GB/s)"
       }
     }
   ]
@@ -232,7 +232,7 @@ aws cloudwatch put-dashboard \
 
 if [ $? -eq 0 ]; then
     echo ""
-    echo "✓ Dashboard created successfully!"
+    echo " Dashboard created successfully!"
     echo ""
     echo "View dashboard:"
     echo "  https://console.aws.amazon.com/cloudwatch/home?region=${REGION}#dashboards:name=${DASHBOARD_NAME}"
@@ -240,7 +240,7 @@ if [ $? -eq 0 ]; then
     echo "Metrics namespace: ParallelCluster/Network"
     echo ""
 else
-    echo "⚠️  Failed to create dashboard"
+    echo "️  Failed to create dashboard"
     exit 1
 fi
 

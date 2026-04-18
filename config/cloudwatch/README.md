@@ -2,7 +2,7 @@
 
 분산학습 클러스터를 위한 종합 모니터링 솔루션입니다.
 
-## 📋 목차
+##  목차
 
 - [빠른 시작](#빠른-시작)
 - [대시보드 구성](#대시보드-구성)
@@ -13,7 +13,7 @@
 - [대시보드 기능 상세](#대시보드-기능-상세)
 - [트러블슈팅](#트러블슈팅)
 
-## 🚀 빠른 시작 (3분)
+##  빠른 시작 (3분)
 
 ### 1단계: S3 배포
 ```bash
@@ -30,10 +30,10 @@ pcluster create-cluster \
 ```
 
 **자동으로 수행되는 작업:**
-- ✅ CloudWatch Agent 설치 (모든 노드)
-- ✅ Slurm 메트릭 수집기 설치 (HeadNode)
-- ✅ DCGM/Node Exporter 설치 (ComputeNode, GPU 모드)
-- ✅ **대시보드 자동 생성** (HeadNode에서 백그라운드)
+-  CloudWatch Agent 설치 (모든 노드)
+-  Slurm 메트릭 수집기 설치 (HeadNode)
+-  DCGM/Node Exporter 설치 (ComputeNode, GPU 모드)
+-  **대시보드 자동 생성** (HeadNode에서 백그라운드)
 
 ### 3단계: 대시보드 확인 (1-2분 후)
 
@@ -57,7 +57,7 @@ bash config/cloudwatch/create-dashboard.sh ${CLUSTER_NAME} ${AWS_REGION}
 bash config/cloudwatch/create-advanced-dashboard.sh ${CLUSTER_NAME} ${AWS_REGION}
 ```
 
-## 📊 대시보드 구성
+##  대시보드 구성
 
 ### 기본 대시보드 (13개 위젯)
 인프라 관리자와 모델 학습자 모두를 위한 종합 모니터링:
@@ -75,7 +75,7 @@ Slurm 작업 큐 및 노드 상태 실시간 모니터링:
 - 작업 완료/실패 로그
 - GPU 상태 모니터링
 
-## 🔧 설치 방법
+##  설치 방법
 
 ### 자동 설치 (권장)
 
@@ -102,7 +102,7 @@ aws s3 cp s3://${S3_BUCKET}/config/cloudwatch/install-cloudwatch-agent.sh /tmp/
 bash /tmp/install-cloudwatch-agent.sh ${CLUSTER_NAME} ${AWS_REGION} ${S3_BUCKET}
 ```
 
-## 🔧 인스턴스 타입별 설정
+##  인스턴스 타입별 설정
 
 Compute node 타입에 따라 설치할 컴포넌트를 선택할 수 있습니다.
 
@@ -123,13 +123,13 @@ export COMPUTE_SETUP_TYPE=""
 
 | 설정 | 설치 항목 | 모니터링 |
 |------|-----------|----------|
-| `"gpu"` | Docker + Pyxis + EFA + DCGM + Node Exporter | ✅ 전체 |
-| `"cpu"` | Docker + Pyxis | ⚠️ CloudWatch만 |
-| `""` | 없음 | ⚠️ CloudWatch 기본만 |
+| `"gpu"` | Docker + Pyxis + EFA + DCGM + Node Exporter |  전체 |
+| `"cpu"` | Docker + Pyxis | ️ CloudWatch만 |
+| `""` | 없음 | ️ CloudWatch 기본만 |
 
 **상세 가이드**: [인스턴스 타입별 설정 가이드](../../guide/INSTANCE-TYPE-CONFIGURATION.md)
 
-## 📈 수집되는 메트릭
+##  수집되는 메트릭
 
 ### CloudWatch Agent (자동 수집)
 - **CPU**: usage_idle, usage_iowait
@@ -156,7 +156,7 @@ export COMPUTE_SETUP_TYPE=""
 - `/var/log/nvidia-installer.log` → `/aws/parallelcluster/${CLUSTER_NAME}/nvidia`
 - `/var/log/parallelcluster/clustermgtd` → `/aws/parallelcluster/${CLUSTER_NAME}/clustermgtd`
 
-## 📁 파일 구조
+##  파일 구조
 
 ```
 config/cloudwatch/
@@ -170,7 +170,7 @@ config/cloudwatch/
 └── deploy-to-s3.sh                    # S3 배포 스크립트
 ```
 
-## 🎨 대시보드 기능 상세
+##  대시보드 기능 상세
 
 ### 기본 대시보드 위젯
 
@@ -231,7 +231,7 @@ Total: 20 jobs
 - 목표: 70-90% (최적 활용률)
 - 비용 효율성 분석
 
-## 🔍 모니터링 확인
+##  모니터링 확인
 
 ### CloudWatch Agent 상태 확인
 
@@ -271,7 +271,7 @@ aws cloudwatch get-metric-statistics \
     --region ${AWS_REGION}
 ```
 
-## 🛠️ 트러블슈팅
+## ️ 트러블슈팅
 
 ### 문제: 대시보드에 데이터가 없음
 
@@ -351,7 +351,7 @@ bash config/cloudwatch/create-dashboard.sh ${CLUSTER_NAME} ${AWS_REGION}
 bash config/cloudwatch/create-advanced-dashboard.sh ${CLUSTER_NAME} ${AWS_REGION}
 ```
 
-## 💡 팁
+##  팁
 
 ### 대시보드 커스터마이징
 `create-dashboard.sh`를 수정하여 원하는 메트릭 추가
@@ -385,7 +385,7 @@ fields @timestamp, @message
 - 메트릭 수집 주기: 60초 (필요시 조정)
 - 불필요한 로그 필터링
 
-## 📚 관련 문서
+##  관련 문서
 
 - [인스턴스 타입별 설정 가이드](../../guide/INSTANCE-TYPE-CONFIGURATION.md)
 - [클러스터 설정 가이드](../README.md)

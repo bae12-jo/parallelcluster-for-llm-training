@@ -254,7 +254,7 @@ aws cloudwatch put-dashboard \
 rm -f /tmp/dashboard-advanced-${CLUSTER_NAME}.json
 
 echo ""
-echo "✓ Advanced dashboard created successfully!"
+echo " Advanced dashboard created successfully!"
 echo ""
 echo "Dashboard URL:"
 echo "https://console.aws.amazon.com/cloudwatch/home?region=${AWS_REGION}#dashboards:name=${DASHBOARD_NAME}"

@@ -66,7 +66,7 @@ for proto in Simple LL LL128; do
         /opt/nccl-tests/all_reduce_perf \
         -b 128M -e 1G -f 2 -g 1 -c 1 -n 30 \
         > $RESULT_DIR/proto-${proto}.log 2>&1
-    echo "  ✓ $proto completed"
+    echo "   $proto completed"
 done
 
 echo ""
@@ -88,7 +88,7 @@ for buffsize in 4194304 8388608 16777216; do
         /opt/nccl-tests/all_reduce_perf \
         -b 128M -e 1G -f 2 -g 1 -c 1 -n 30 \
         > $RESULT_DIR/buffsize-${buffsize_mb}MB.log 2>&1
-    echo "  ✓ ${buffsize_mb}MB completed"
+    echo "   ${buffsize_mb}MB completed"
 done
 
 echo ""
@@ -109,7 +109,7 @@ for nchannels in 8 16 32; do
         /opt/nccl-tests/alltoall_perf \
         -b 16M -e 256M -f 2 -g 1 -c 1 -n 30 \
         > $RESULT_DIR/channels-${nchannels}.log 2>&1
-    echo "  ✓ $nchannels channels completed"
+    echo "   $nchannels channels completed"
 done
 
 echo ""
@@ -143,7 +143,7 @@ srun --mpi=pmix \
     -b 256M -e 1G -f 2 -g 1 -c 1 -n 20 \
     > $RESULT_DIR/efa-optimized.log 2>&1
 
-echo "  ✓ EFA optimization test completed"
+echo "   EFA optimization test completed"
 echo ""
 
 # Generate optimization report
@@ -273,19 +273,19 @@ For MoE Models (Switch, GLaM, etc.):
 
 All 4 phases completed! Your cluster is ready for production training.
 
-Phase 1: Baseline ✓
+Phase 1: Baseline 
   - Single-node performance verified
   - Both Dense and MoE patterns tested
 
-Phase 2: Multi-node ✓
+Phase 2: Multi-node 
   - Scaling efficiency validated
   - EFA network performance confirmed
 
-Phase 3: Workload ✓
+Phase 3: Workload 
   - Real workload patterns tested
   - Expert capacity optimized
 
-Phase 4: Optimization ✓
+Phase 4: Optimization 
   - NCCL parameters tuned
   - EFA optimizations validated
 
@@ -317,7 +317,7 @@ echo "=========================================="
 echo "Phase 4 Optimization Tests Completed!"
 echo "=========================================="
 echo ""
-echo "🎉 All NCCL testing phases completed successfully!"
+echo " All NCCL testing phases completed successfully!"
 echo ""
 echo "Results saved to: $RESULT_DIR"
 echo "Report: $REPORT_FILE"

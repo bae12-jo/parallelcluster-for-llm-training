@@ -47,9 +47,9 @@ echo "[4/4] Starting CloudWatch Agent..."
 # Verify agent is running
 sleep 5
 if systemctl is-active --quiet amazon-cloudwatch-agent; then
-    echo "✓ CloudWatch Agent installed and running"
+    echo " CloudWatch Agent installed and running"
 else
-    echo "✗ CloudWatch Agent failed to start"
+    echo " CloudWatch Agent failed to start"
     systemctl status amazon-cloudwatch-agent
     exit 1
 fi

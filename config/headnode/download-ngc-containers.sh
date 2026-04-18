@@ -26,7 +26,7 @@ echo ""
 # Check and fix Lustre kernel module if needed
 echo "Checking Lustre filesystem..."
 if ! mountpoint -q /fsx; then
-    echo "⚠️  /fsx is not mounted, checking Lustre kernel module..."
+    echo "️  /fsx is not mounted, checking Lustre kernel module..."
     
     # Check if Lustre module is loaded
     if ! lsmod | grep -q lustre; then
@@ -41,7 +41,7 @@ if ! mountpoint -q /fsx; then
             echo "Installing Lustre client module for kernel ${KERNEL_VERSION}..."
             apt-get update -qq
             apt-get install -y lustre-client-modules-${KERNEL_VERSION} || {
-                echo "❌ Failed to install Lustre module for ${KERNEL_VERSION}"
+                echo " Failed to install Lustre module for ${KERNEL_VERSION}"
                 echo "Available modules:"
                 apt-cache search lustre-client-modules | grep ${KERNEL_VERSION%-*}
                 exit 1
@@ -50,17 +50,17 @@ if ! mountpoint -q /fsx; then
         
         # Load Lustre module
         modprobe lustre || {
-            echo "❌ Failed to load Lustre module"
+            echo " Failed to load Lustre module"
             exit 1
         }
         
-        echo "✓ Lustre module loaded"
+        echo " Lustre module loaded"
     fi
     
     # Try to mount /fsx
     echo "Attempting to mount /fsx..."
     systemctl restart fsx.mount || {
-        echo "❌ Failed to mount /fsx"
+        echo " Failed to mount /fsx"
         systemctl status fsx.mount
         exit 1
     }
@@ -68,23 +68,23 @@ if ! mountpoint -q /fsx; then
     sleep 2
     
     if ! mountpoint -q /fsx; then
-        echo "❌ Error: /fsx is still not mounted after fixing Lustre"
+        echo " Error: /fsx is still not mounted after fixing Lustre"
         exit 1
     fi
     
-    echo "✓ /fsx mounted successfully"
+    echo " /fsx mounted successfully"
 else
-    echo "✓ /fsx is already mounted"
+    echo " /fsx is already mounted"
 fi
 
 # Verify /fsx is accessible
 if [ ! -w /fsx ]; then
-    echo "❌ Error: /fsx is not writable"
+    echo " Error: /fsx is not writable"
     ls -ld /fsx
     exit 1
 fi
 
-echo "✓ Lustre filesystem ready"
+echo " Lustre filesystem ready"
 echo ""
 
 # Create directories
@@ -92,7 +92,7 @@ echo "Creating directories..."
 mkdir -p "${CONTAINER_DIR}"
 mkdir -p "${LOG_DIR}"
 mkdir -p /fsx/scripts
-echo "✓ Directories created"
+echo " Directories created"
 echo ""
 
 # Install enroot if not already installed
@@ -114,9 +114,9 @@ if ! command -v enroot &> /dev/null; then
     
     rm -f enroot*.deb
     
-    echo "✓ enroot installed"
+    echo " enroot installed"
 else
-    echo "✓ enroot already installed ($(enroot version))"
+    echo " enroot already installed ($(enroot version))"
 fi
 echo ""
 
@@ -145,7 +145,7 @@ EOF
 
 # Create enroot directories
 mkdir -p /fsx/containers/{runtime,cache,data}
-echo "✓ enroot configured"
+echo " enroot configured"
 echo ""
 
 # Download containers from S3
@@ -186,7 +186,7 @@ for container_spec in "${CONTAINERS[@]}"; do
     # Check if already exists
     if [ -f "${SQSH_PATH}" ]; then
         SIZE=$(du -h "${SQSH_PATH}" | cut -f1)
-        echo "✓ Already exists (${SIZE}), skipping"
+        echo " Already exists (${SIZE}), skipping"
         ((SUCCESS_COUNT++))
         echo ""
         continue
@@ -201,7 +201,7 @@ for container_spec in "${CONTAINERS[@]}"; do
         DOWNLOAD_DURATION=$((DOWNLOAD_TIME - START_TIME))
         TAR_SIZE=$(du -h "${TAR_PATH}" | cut -f1)
         
-        echo "✓ Downloaded from S3 (${TAR_SIZE} in ${DOWNLOAD_DURATION}s)"
+        echo " Downloaded from S3 (${TAR_SIZE} in ${DOWNLOAD_DURATION}s)"
         
         # Convert to Enroot format
         echo "Converting to Enroot format..."
@@ -210,7 +210,7 @@ for container_spec in "${CONTAINERS[@]}"; do
             TOTAL_DURATION=$((END_TIME - START_TIME))
             SQSH_SIZE=$(du -h "${SQSH_PATH}" | cut -f1)
             
-            echo "✓ Converted successfully"
+            echo " Converted successfully"
             echo "  Final size: ${SQSH_SIZE}"
             echo "  Total duration: ${TOTAL_DURATION}s"
             
@@ -219,12 +219,12 @@ for container_spec in "${CONTAINERS[@]}"; do
             
             ((SUCCESS_COUNT++))
         else
-            echo "❌ Conversion failed (see log for details)"
+            echo " Conversion failed (see log for details)"
             rm -f "${TAR_PATH}"
             ((FAIL_COUNT++))
         fi
     else
-        echo "❌ S3 download failed (see log for details)"
+        echo " S3 download failed (see log for details)"
         echo "   Make sure the file exists: aws s3 ls ${S3_PATH}"
         ((FAIL_COUNT++))
     fi
@@ -300,7 +300,7 @@ EOFHELPER
 
 chmod +x /fsx/containers/list-containers.sh
 
-echo "✓ Helper script created: /fsx/containers/list-containers.sh"
+echo " Helper script created: /fsx/containers/list-containers.sh"
 echo ""
 
 # Create Lustre health check script
@@ -314,24 +314,24 @@ echo ""
 
 # Check if mounted
 if mountpoint -q /fsx; then
-    echo "✓ /fsx is mounted"
+    echo " /fsx is mounted"
 else
-    echo "❌ /fsx is NOT mounted"
+    echo " /fsx is NOT mounted"
     exit 1
 fi
 
 # Check kernel module
 if lsmod | grep -q lustre; then
-    echo "✓ Lustre kernel module loaded"
+    echo " Lustre kernel module loaded"
     LUSTRE_VERSION=$(modinfo lustre | grep ^version: | awk '{print $2}')
     echo "  Version: ${LUSTRE_VERSION}"
 else
-    echo "❌ Lustre kernel module NOT loaded"
+    echo " Lustre kernel module NOT loaded"
 fi
 
 # Check kernel version
 KERNEL_VERSION=$(uname -r)
-echo "✓ Kernel version: ${KERNEL_VERSION}"
+echo " Kernel version: ${KERNEL_VERSION}"
 
 # Check available Lustre modules
 echo ""
@@ -354,14 +354,14 @@ EOFCHECK
 
 chmod +x /fsx/scripts/check-lustre.sh
 
-echo "✓ Lustre health check script created: /fsx/scripts/check-lustre.sh"
+echo " Lustre health check script created: /fsx/scripts/check-lustre.sh"
 echo ""
 
 if [ $FAIL_COUNT -eq 0 ]; then
-    echo "✓ All containers downloaded successfully"
+    echo " All containers downloaded successfully"
     exit 0
 else
-    echo "⚠️  Some containers failed to download"
+    echo "️  Some containers failed to download"
     echo "   Check log file: ${LOG_FILE}"
     echo "   Verify S3 bucket: aws s3 ls s3://${S3_BUCKET}/containers/"
     exit 1

@@ -9,7 +9,7 @@ set -e
 if [ -f "environment-variables-bailey.sh" ]; then
     source environment-variables-bailey.sh
 else
-    echo "❌ Error: environment-variables-bailey.sh not found"
+    echo " Error: environment-variables-bailey.sh not found"
     exit 1
 fi
 
@@ -33,7 +33,7 @@ echo "[2/2] Verifying upload..."
 aws s3 ls s3://${S3_BUCKET}/config/cloudwatch/ --recursive --region ${AWS_REGION}
 
 echo ""
-echo "✓ CloudWatch configuration deployed successfully!"
+echo " CloudWatch configuration deployed successfully!"
 echo ""
 echo "Next steps:"
 echo "1. Update cluster configuration (if needed)"

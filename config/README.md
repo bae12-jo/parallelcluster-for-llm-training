@@ -2,7 +2,7 @@
 
 각 노드 타입별로 역할에 맞는 소프트웨어만 설치하여 효율적인 클러스터 구성을 제공합니다.
 
-## 📋 노드별 설치 항목
+##  노드별 설치 항목
 
 ### Login Node (사용자 SSH 접속용)
 **목적**: 사용자가 코드 작성 및 작업 제출  
@@ -139,7 +139,7 @@ systemctl start dcgm-exporter
 
 ---
 
-## 🔄 데이터 흐름
+##  데이터 흐름
 
 ```
 Login Node → CloudWatch Agent → CloudWatch
@@ -160,7 +160,7 @@ Nodes      → DCGM (9400) ─────┘
 
 ---
 
-## 📦 S3 업로드
+##  S3 업로드
 
 스크립트를 S3에 업로드하여 ParallelCluster CustomActions에서 사용:
 
@@ -174,7 +174,7 @@ aws s3 ls s3://your-bucket/config/ --recursive
 
 ---
 
-## 🚀 사용 방법
+##  사용 방법
 
 ### 1. environment-variables.sh 설정
 
@@ -216,7 +216,7 @@ pcluster create-cluster \
 
 ---
 
-## 🔍 문제 해결
+##  문제 해결
 
 ### 스크립트 실행 로그 확인
 
@@ -247,7 +247,7 @@ curl http://localhost:9100/metrics
 
 ---
 
-## 📚 참고 자료
+##  참고 자료
 
 - [AWS ParallelCluster Documentation](https://docs.aws.amazon.com/parallelcluster/)
 - [NVIDIA DCGM Exporter](https://github.com/NVIDIA/dcgm-exporter)
@@ -257,7 +257,7 @@ curl http://localhost:9100/metrics
 
 ---
 
-## 📊 CloudWatch 모니터링
+##  CloudWatch 모니터링
 
 ### 종합 대시보드 솔루션
 
@@ -266,11 +266,11 @@ curl http://localhost:9100/metrics
 **목적**: 인프라 관리자와 모델 학습자를 위한 실시간 모니터링 대시보드
 
 **주요 기능**:
-- ✅ 실시간 시스템 메트릭 (CPU, 메모리, 디스크, 네트워크)
-- ✅ Slurm 작업 큐 및 노드 상태 모니터링
-- ✅ GPU 모니터링 (DCGM)
-- ✅ FSx Lustre I/O 성능
-- ✅ 로그 수집 및 분석 (Slurm, DCGM, 클러스터 관리)
+-  실시간 시스템 메트릭 (CPU, 메모리, 디스크, 네트워크)
+-  Slurm 작업 큐 및 노드 상태 모니터링
+-  GPU 모니터링 (DCGM)
+-  FSx Lustre I/O 성능
+-  로그 수집 및 분석 (Slurm, DCGM, 클러스터 관리)
 
 ### 빠른 시작 (5분)
 
@@ -366,7 +366,7 @@ aws cloudwatch list-dashboards --region ${AWS_REGION}
 
 ---
 
-## 🔄 업데이트된 데이터 흐름
+##  업데이트된 데이터 흐름
 
 ```
 Login Node → CloudWatch Agent → CloudWatch Logs/Metrics
@@ -387,7 +387,7 @@ Nodes      → DCGM (9400) ─────┘
 
 ---
 
-## 💡 추가 팁
+##  추가 팁
 
 ### CloudWatch 비용 최적화
 - 로그 보관 기간: 7일 (기본값, `cloudwatch-agent-config.json`에서 변경 가능)

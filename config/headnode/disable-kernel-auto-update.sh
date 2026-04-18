@@ -18,9 +18,9 @@ if [ -f /etc/apt/apt.conf.d/50unattended-upgrades ]; then
     # Add kernel packages to blacklist
     if ! grep -q "linux-image" /etc/apt/apt.conf.d/50unattended-upgrades; then
         sed -i '/Unattended-Upgrade::Package-Blacklist {/a\    "linux-image-*";\n    "linux-headers-*";\n    "linux-modules-*";\n    "linux-aws";' /etc/apt/apt.conf.d/50unattended-upgrades
-        echo "✓ Added kernel packages to blacklist"
+        echo " Added kernel packages to blacklist"
     else
-        echo "✓ Kernel packages already blacklisted"
+        echo " Kernel packages already blacklisted"
     fi
 fi
 
@@ -34,9 +34,9 @@ if dpkg -l | grep -q "${KERNEL_PACKAGE}"; then
     apt-mark hold linux-headers-${KERNEL_VERSION}
     apt-mark hold linux-modules-${KERNEL_VERSION}
     apt-mark hold linux-aws
-    echo "✓ Kernel packages held at current version"
+    echo " Kernel packages held at current version"
 else
-    echo "⚠️  Current kernel package not found in dpkg"
+    echo "️  Current kernel package not found in dpkg"
 fi
 
 # Method 3: Pin Lustre client modules to current kernel
@@ -44,7 +44,7 @@ echo "Installing Lustre client modules for current kernel..."
 apt-get update -qq
 apt-get install -y lustre-client-modules-${KERNEL_VERSION}
 apt-mark hold lustre-client-modules-${KERNEL_VERSION}
-echo "✓ Lustre modules installed and held"
+echo " Lustre modules installed and held"
 
 # Create systemd service to check Lustre on boot
 cat > /etc/systemd/system/lustre-module-check.service << 'EOF'
@@ -72,7 +72,7 @@ fi
 # Enable service
 systemctl daemon-reload
 systemctl enable lustre-module-check.service
-echo "✓ Lustre module check service enabled"
+echo " Lustre module check service enabled"
 
 echo ""
 echo "=== Kernel Auto-Update Prevention Complete ==="

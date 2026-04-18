@@ -114,7 +114,7 @@ srun --container-image=/fsx/containers/nvcr.io_nvidia_pytorch-24.01-py3.sqsh \
 
 NCCL is **NOT** automatically installed. You have two options:
 
-### Option 1: Use NGC Containers (Recommended) ✅
+### Option 1: Use NGC Containers (Recommended) 
 
 NGC containers already include optimized NCCL:
 - **PyTorch 24.01**: NCCL 2.19.3
@@ -123,10 +123,10 @@ NGC containers already include optimized NCCL:
 **No additional installation needed!**
 
 **Advantages**:
-- ✅ Zero installation time
-- ✅ Pre-tested and optimized for AWS
-- ✅ Includes all dependencies (CUDA, cuDNN, etc.)
-- ✅ Easy version management
+-  Zero installation time
+-  Pre-tested and optimized for AWS
+-  Includes all dependencies (CUDA, cuDNN, etc.)
+-  Easy version management
 
 ### Option 2: Manual NCCL Installation to FSx
 
@@ -159,15 +159,15 @@ ComputeNodes **automatically detect** NCCL in `/fsx/nccl/` during initialization
 **How it works**:
 
 1. **New ComputeNodes** (started after NCCL installation):
-   - ✅ Automatically detect `/fsx/nccl/setup-nccl-env.sh`
-   - ✅ Configure environment variables
-   - ✅ Ready to use immediately
-   - ❌ **No additional steps needed**
+   -  Automatically detect `/fsx/nccl/setup-nccl-env.sh`
+   -  Configure environment variables
+   -  Ready to use immediately
+   -  **No additional steps needed**
 
 2. **Already running ComputeNodes** (started before NCCL installation):
-   - ⚠️ Need manual configuration (one-time)
+   - ️ Need manual configuration (one-time)
    - Run: `bash /fsx/nccl/apply-nccl-to-running-nodes.sh`
-   - ✅ Applies to all nodes permanently
+   -  Applies to all nodes permanently
 
 #### Applying NCCL to Running Nodes
 
@@ -185,11 +185,11 @@ bash /fsx/nccl/apply-nccl-to-running-nodes.sh
 4. Makes configuration permanent (survives reboots)
 
 **After running this script**:
-- ✅ Current Slurm jobs can use NCCL immediately
-- ✅ New Slurm jobs automatically use NCCL
-- ✅ New SSH sessions automatically load NCCL
-- ✅ Configuration persists after reboot
-- ❌ **No need to run again**
+-  Current Slurm jobs can use NCCL immediately
+-  New Slurm jobs automatically use NCCL
+-  New SSH sessions automatically load NCCL
+-  Configuration persists after reboot
+-  **No need to run again**
 
 #### Recommended Workflow
 
@@ -203,7 +203,7 @@ pcluster create-cluster --cluster-name my-cluster --cluster-configuration cluste
 ssh headnode
 sudo bash /fsx/nccl/install-nccl-shared.sh v2.28.7-1 v1.17.2-aws /fsx
 
-# 3. Submit job → ComputeNodes start → NCCL auto-detected ✅
+# 3. Submit job → ComputeNodes start → NCCL auto-detected 
 sbatch my-training-job.sh
 ```
 
@@ -285,16 +285,16 @@ NCCL_MIN_NRINGS=8
 #### When to Use Manual NCCL Installation
 
 Use manual installation when:
-- ✅ Need specific NCCL version (e.g., latest development build)
-- ✅ Testing NCCL patches or custom builds
-- ✅ Require specific AWS OFI NCCL version
-- ✅ Need NCCL tests for benchmarking
+-  Need specific NCCL version (e.g., latest development build)
+-  Testing NCCL patches or custom builds
+-  Require specific AWS OFI NCCL version
+-  Need NCCL tests for benchmarking
 
 Use NGC containers when:
-- ✅ Standard training workloads
-- ✅ Want pre-tested, optimized setup
-- ✅ Need reproducible environments
-- ✅ Prefer zero installation time
+-  Standard training workloads
+-  Want pre-tested, optimized setup
+-  Need reproducible environments
+-  Prefer zero installation time
 
 ## FSx Lustre Directory Structure
 

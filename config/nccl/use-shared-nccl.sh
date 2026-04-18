@@ -22,7 +22,7 @@ echo "=========================================="
 
 # Check if shared directory exists
 if [ ! -d "${SHARED_DIR}" ]; then
-    echo "✗ Error: Shared directory ${SHARED_DIR} does not exist"
+    echo " Error: Shared directory ${SHARED_DIR} does not exist"
     echo "  NCCL cannot be configured"
     exit 1
 fi
@@ -32,7 +32,7 @@ MAX_WAIT=300  # 5 minutes
 WAIT_COUNT=0
 while [ -f "${NCCL_INSTALL_DIR}/.installing" ]; do
     if [ $WAIT_COUNT -ge $MAX_WAIT ]; then
-        echo "✗ Timeout waiting for NCCL installation on HeadNode"
+        echo " Timeout waiting for NCCL installation on HeadNode"
         exit 1
     fi
     echo "⏳ Waiting for NCCL installation to complete on HeadNode... ($WAIT_COUNT/$MAX_WAIT seconds)"
@@ -42,18 +42,18 @@ done
 
 # Check if NCCL is installed
 if [ ! -f "${NCCL_VERSION_FILE}" ]; then
-    echo "✗ Error: NCCL not found in shared storage"
+    echo " Error: NCCL not found in shared storage"
     echo "  Expected location: ${NCCL_INSTALL_DIR}"
     echo "  Please ensure NCCL is installed on HeadNode first"
     exit 1
 fi
 
 NCCL_VERSION=$(cat "${NCCL_VERSION_FILE}")
-echo "✓ Found NCCL installation: ${NCCL_VERSION}"
+echo " Found NCCL installation: ${NCCL_VERSION}"
 
 # Check if environment setup script exists
 if [ ! -f "${NCCL_ENV_SCRIPT}" ]; then
-    echo "✗ Error: NCCL environment script not found"
+    echo " Error: NCCL environment script not found"
     echo "  Expected: ${NCCL_ENV_SCRIPT}"
     exit 1
 fi
@@ -76,17 +76,17 @@ chmod +x "${PROFILE_SCRIPT}"
 echo ""
 echo "Verifying NCCL installation..."
 if ldconfig -p | grep -q libnccl; then
-    echo "✓ NCCL libraries found in system"
+    echo " NCCL libraries found in system"
     ldconfig -p | grep libnccl | head -3
 else
-    echo "⚠️  Warning: NCCL libraries not found in ldconfig cache"
+    echo "️  Warning: NCCL libraries not found in ldconfig cache"
     echo "   Running ldconfig..."
     ldconfig
 fi
 
 echo ""
 echo "=========================================="
-echo "✓ Shared NCCL Configuration Complete"
+echo " Shared NCCL Configuration Complete"
 echo "=========================================="
 echo "NCCL Version: ${NCCL_VERSION}"
 echo "Environment Script: ${NCCL_ENV_SCRIPT}"

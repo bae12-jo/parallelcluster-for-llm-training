@@ -75,7 +75,7 @@ if ! mountpoint -q /fsx; then
     sleep 2
 fi
 
-echo "✓ Lustre ready"
+echo " Lustre ready"
 ```
 
 #### B. 독립 스크립트 사용
@@ -126,10 +126,10 @@ sudo bash /fsx/config/headnode/disable-kernel-auto-update.sh
 ```
 
 이 스크립트는:
-- ✅ 커널 패키지를 자동 업데이트 블랙리스트에 추가
-- ✅ 현재 커널 버전을 hold
-- ✅ Lustre 모듈을 현재 커널에 고정
-- ✅ 부팅 시 Lustre 모듈 체크 서비스 생성
+-  커널 패키지를 자동 업데이트 블랙리스트에 추가
+-  현재 커널 버전을 hold
+-  Lustre 모듈을 현재 커널에 고정
+-  부팅 시 Lustre 모듈 체크 서비스 생성
 
 ### 방법 4: Systemd 서비스로 자동화 (최고 안정성)
 

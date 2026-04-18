@@ -19,18 +19,18 @@ config/
 
 #### 1. Login Node (`loginnode/setup-loginnode.sh`)
 **Arguments:** `<CLUSTER_NAME> <REGION> <S3_BUCKET> <MONITORING_TYPE>`
-- ✅ CloudWatch Agent
-- ✅ Basic dev tools (vim, git, htop)
+-  CloudWatch Agent
+-  Basic dev tools (vim, git, htop)
 - ⏱️ ~2 minutes
 
 #### 2. Head Node (`headnode/setup-headnode.sh`)
 **Arguments:** `<CLUSTER_NAME> <REGION> <S3_BUCKET> <MONITORING_TYPE> <AMP_ENDPOINT>`
-- ✅ CloudWatch Agent
-- ✅ Prometheus (monitoring type dependent):
+-  CloudWatch Agent
+-  Prometheus (monitoring type dependent):
   - **self-hosting**: Local storage only
   - **amp-only/amp+amg**: AMP remote_write with SigV4 auth
   - **none**: CloudWatch Agent only
-- ✅ EC2 auto-discovery for Compute Node metrics
+-  EC2 auto-discovery for Compute Node metrics
 - ⏱️ ~5 minutes
 
 **Monitoring Type Behavior:**
@@ -49,13 +49,13 @@ CloudWatch Agent only
 **Arguments:** `<CLUSTER_NAME> <REGION> <S3_BUCKET> <MONITORING_TYPE>`
 
 **Includes everything from EFA installer:**
-- ✅ EFA Driver (with GPU detection)
-- ✅ NCCL
-- ✅ Docker + NVIDIA Container Toolkit
-- ✅ Pyxis (Slurm container plugin)
-- ✅ CloudWatch Agent
-- ✅ DCGM Exporter (port 9400) - GPU metrics
-- ✅ Node Exporter (port 9100) - System metrics
+-  EFA Driver (with GPU detection)
+-  NCCL
+-  Docker + NVIDIA Container Toolkit
+-  Pyxis (Slurm container plugin)
+-  CloudWatch Agent
+-  DCGM Exporter (port 9400) - GPU metrics
+-  Node Exporter (port 9100) - System metrics
 - ⏱️ ~15-20 minutes
 
 **GPU Detection Logic:**
@@ -81,11 +81,11 @@ HeadNode Prometheus (EC2 auto-discovery)
 
 #### 4. Monitoring Instance (CloudFormation UserData)
 **Note**: Setup is embedded in `parallelcluster-infrastructure.yaml` UserData, not using the script.
-- ✅ Docker + Docker Compose
-- ✅ Grafana (port 3000)
-- ✅ Prometheus (federation from Head Node)
+-  Docker + Docker Compose
+-  Grafana (port 3000)
+-  Prometheus (federation from Head Node)
 - ⏱️ ~5 minutes
-- 📄 `monitoring/setup-monitoring-instance.sh` is for reference/manual installation only
+-  `monitoring/setup-monitoring-instance.sh` is for reference/manual installation only
 
 **Alternative**: Use AWS Managed Grafana (amp+amg) instead of self-hosting
 
@@ -153,10 +153,10 @@ pcluster create-cluster --cluster-name ${CLUSTER_NAME} \
 ```
 
 **Key Points:**
-- ✅ All values passed as script arguments (no IAM permissions needed)
-- ✅ Monitoring type auto-configured based on infrastructure stack
-- ✅ AMP Policy automatically added for amp-only/amp+amg modes
-- ✅ Graceful handling of missing S3 config files
+-  All values passed as script arguments (no IAM permissions needed)
+-  Monitoring type auto-configured based on infrastructure stack
+-  AMP Policy automatically added for amp-only/amp+amg modes
+-  Graceful handling of missing S3 config files
 
 ### Pattern 2: Manual EFA Installation
 Use standalone EFA installer:
@@ -206,20 +206,20 @@ All nodes                      ────> Can use nccl/ scripts
 ### Recent Updates (2024-11)
 
 #### 1. Simplified Architecture
-- ❌ **Removed**: CloudFormation API calls from scripts
-- ✅ **Added**: All values passed as arguments from environment-variables.sh
-- ✅ **Result**: No IAM permissions needed for cloudformation:DescribeStacks
+-  **Removed**: CloudFormation API calls from scripts
+-  **Added**: All values passed as arguments from environment-variables.sh
+-  **Result**: No IAM permissions needed for cloudformation:DescribeStacks
 
 #### 2. AMP Integration
-- ✅ HeadNode automatically configures AMP remote_write
-- ✅ Monitoring type passed as argument (self-hosting, amp-only, amp+amg, none)
-- ✅ AMP endpoint passed as argument (no API calls)
-- ✅ Fail-fast on configuration errors (prevents resource waste)
+-  HeadNode automatically configures AMP remote_write
+-  Monitoring type passed as argument (self-hosting, amp-only, amp+amg, none)
+-  AMP endpoint passed as argument (no API calls)
+-  Fail-fast on configuration errors (prevents resource waste)
 
 #### 3. Error Handling
-- ✅ Graceful handling of missing S3 config files
-- ✅ Clear error messages with troubleshooting steps
-- ✅ Detailed logging of what's installed vs. what's missing
+-  Graceful handling of missing S3 config files
+-  Clear error messages with troubleshooting steps
+-  Detailed logging of what's installed vs. what's missing
 
 #### 4. Compute Script Features
 The compute setup script includes all advanced features:
