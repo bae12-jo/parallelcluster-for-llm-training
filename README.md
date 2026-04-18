@@ -1,28 +1,12 @@
 # AWS ParallelCluster for Distributed Training
 
-> Samples and configurations in this repository are based on p6-b200 instance types.
-
 Self-contained setup for distributed training clusters on AWS ParallelCluster, with automated GPU monitoring, EFA networking, and FSx Lustre storage.
 
 ---
 
 ## Architecture
 
-```
-                         Private Subnet
-                    ┌────────────────────┐
-LoginNode ──SSH──▶  │  HeadNode (Slurm)  │
-(Public)            │  ComputeNodes x N  │
-                    │  FSx Lustre /fsx   │
-                    └────────────────────┘
-
-                         Public Subnet
-                    ┌────────────────────┐
-                    │  Monitoring EC2    │ ◀── ALB (HTTP :80)
-                    │  Prometheus :9090  │
-                    │  Grafana     :3000 │
-                    └────────────────────┘
-```
+![Architecture Diagram](img/architecture.png)
 
 - **LoginNode** — user SSH access and job submission (public subnet, IP-restricted)
 - **HeadNode** — Slurm scheduler, NFS /home server (private subnet)
@@ -32,6 +16,8 @@ LoginNode ──SSH──▶  │  HeadNode (Slurm)  │
 ---
 
 ## Directory Structure
+
+> Samples and configurations in this repository are based on p6-b200 instance types.
 
 ```
 .
