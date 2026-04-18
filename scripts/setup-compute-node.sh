@@ -143,6 +143,13 @@ EOF
   echo "node_exporter (EFA) started on :9100"
 fi
 
+# ---- NVIDIA Fabric Manager (NVLink/NVSwitch — required for B200/H100 multi-GPU) ----
+# Installed in pcluster AMI but disabled by default — enable for NVLink topology
+if systemctl list-unit-files nvidia-fabricmanager.service &>/dev/null; then
+  systemctl enable --now nvidia-fabricmanager 2>/dev/null || true
+  echo "nvidia-fabricmanager enabled"
+fi
+
 # ---- DCGM exporter 4.5.2-4.8.1 ----
 # Full Blackwell B200 support: NVLink-5, HBM3e, Transformer Engine, XID errors
 if ! systemctl is-active --quiet dcgm-exporter; then
@@ -184,6 +191,18 @@ INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
 REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
 ${AWS_CLI} ec2 create-tags --region "${REGION}" --resources "${INSTANCE_ID}" \
   --tags Key=parallelcluster:node-type,Value=Compute 2>/dev/null || true
+
+# Set Name tag using Slurm hostname (stable across instance replacements within same slot)
+for i in $(seq 1 30); do
+  HOST=$(hostname -s 2>/dev/null)
+  if [[ -n "${HOST}" && ! "${HOST}" =~ ^ip- ]]; then
+    ${AWS_CLI} ec2 create-tags --region "${REGION}" --resources "${INSTANCE_ID}" \
+      --tags "Key=Name,Value=${HOST}" 2>/dev/null || true
+    echo "Node Name tag set: ${HOST}"
+    break
+  fi
+  sleep 10
+done
 
 # ---- slurm:hostname tag (for Prometheus node_name label) ----
 # Slurm assigns hostname after boot; retry until we get a non-IMDS name
