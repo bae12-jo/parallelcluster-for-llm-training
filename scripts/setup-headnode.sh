@@ -64,6 +64,7 @@ ExecStart=/usr/local/bin/node_exporter \
   --collector.systemd \
   --collector.processes \
   --collector.pressure \
+  --collector.textfile.directory=/var/lib/node_exporter/textfile \
   --web.listen-address=:9100
 Restart=always
 RestartSec=5
