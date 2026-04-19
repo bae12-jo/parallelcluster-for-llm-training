@@ -434,7 +434,7 @@
       },
       "targets": [
         {
-          "expr": "slurm_node_state_reason{state!~\"idle|allocated|mixed\"} == 1",
+          "expr": "slurm_node_state_reason{reason!~\"none|Not specified|\"} == 1",
           "legendFormat": "{{node}} \u2014 {{state}}: {{reason}}",
           "refId": "A"
         }

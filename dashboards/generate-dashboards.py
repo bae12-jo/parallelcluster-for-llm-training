@@ -229,7 +229,7 @@ d1_panels = [
        [t('sum by (node_name) (rate(node_efa_hw_rx_drops[5m]))', "{{node_name}}")],
        unit="short", x=12, y=11, w=12, h=7),
     tbl(11, "Node Down / Draining Reasons",
-       [t('slurm_node_state_reason{state!~"idle|allocated|mixed"} == 1', "{{node}} — {{state}}: {{reason}}")],
+       [t('slurm_node_state_reason{reason!~"none|Not specified|"} == 1', "{{node}} — {{state}}: {{reason}}")],
        x=0, y=18, w=24, h=6),
 ]
 
