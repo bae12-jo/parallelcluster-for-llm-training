@@ -21,10 +21,17 @@ Self-contained setup for distributed training clusters on AWS ParallelCluster, w
 
 ```
 .
-├── parallelcluster-infrastructure.yaml  CloudFormation: VPC, FSx, SGs, monitoring (4 modes)
-├── cluster-config.yaml.template         Cluster config template (envsubst-based)
-├── cluster-sample.yaml                  Ready-to-use sample based on p6-b200
-├── environment-variables.sh             All configurable variables with defaults
+├── deployment/                          Infrastructure and cluster deployment files
+│   ├── README.md                        Step-by-step deployment workflow
+│   ├── templates/
+│   │   ├── parallelcluster-infrastructure-template.yaml  CloudFormation: VPC, FSx, SGs, monitoring (4 modes)
+│   │   ├── cluster-config.yaml.template                  Cluster config (envsubst-based, fill with env-vars)
+│   │   ├── environment-variables.sh                      Auto-fetches CFn outputs, exports as shell vars
+│   │   └── prometheus.yml                                Prometheus config (EC2 SD + node_name relabeling)
+│   └── samples/
+│       ├── cluster-sample.yaml          g5.12xlarge on-demand sample
+│       ├── cluster-config-p6b200.yaml   p6-b200 Capacity Block sample
+│       └── build-image-p6b200.yaml      Custom AMI build config for p6-b200
 │
 ├── scripts/
 │   ├── setup-headnode.sh                OnNodeConfigured: node_exporter + slurm_exporter
@@ -35,8 +42,7 @@ Self-contained setup for distributed training clusters on AWS ParallelCluster, w
 │   ├── deploy-cluster-stack.sh          Full deploy: CFn stack + pcluster (env-var driven)
 │   ├── build-p6b200-ami.sh              Build custom AMI with p6-b200 prerequisites
 │   ├── check-compute-setup.sh           Validate compute node configuration
-│   ├── monitor-compute-node-setup.sh    Track compute node bootstrap progress
-│   └── upload-monitoring-scripts.sh     Sync scripts to S3
+│   └── monitor-compute-node-setup.sh    Track compute node bootstrap progress
 │
 ├── dashboards/
 │   ├── generate-dashboards.py           Regenerate all dashboard JSONs
@@ -48,14 +54,6 @@ Self-contained setup for distributed training clusters on AWS ParallelCluster, w
 │   ├── 05-efa-nvlink.json               Inter-node bandwidth, RDMA
 │   ├── 06-host-system.json              CPU, memory, PSI, storage I/O
 │   └── 07-z-score-outlier.json          Statistical outlier detection
-│
-├── infrastructure/
-│   ├── gpu-cluster-infra.yaml           CloudFormation: VPC, FSx, SGs, monitoring EC2 + ALB
-│   └── prometheus.yml                   Prometheus config (EC2 SD with node_name relabeling)
-│
-├── cluster/
-│   ├── cluster-config.yaml              ParallelCluster config template (g5/g6, on-demand)
-│   └── cluster-config-p6b200.yaml       ParallelCluster config for p6-b200 (Capacity Block)
 │
 ├── guide/                               Detailed documentation (numbered)
 │   ├── 01-instance-type-configuration.md
@@ -69,7 +67,6 @@ Self-contained setup for distributed training clusters on AWS ParallelCluster, w
 │   ├── headnode/                        HeadNode utilities: NCCL-to-FSx, NGC download, kernel update disable
 │   └── nccl/                            NCCL test sbatch scripts (phase1–4) + shared install scripts
 │
-├── reference/                           Reference templates and environment variable examples
 ├── security-best-practices/             Security hardening and access guides
 └── img/                                 Architecture diagrams
 ```
@@ -121,7 +118,7 @@ MY_IP=$(curl -s https://checkip.amazonaws.com)
 
 aws cloudformation create-stack \
   --stack-name gpu-cluster-for-ml \
-  --template-body file://parallelcluster-infrastructure.yaml \
+  --template-body file://deployment/templates/parallelcluster-infrastructure-template.yaml \
   --capabilities CAPABILITY_IAM \
   --parameters \
     ParameterKey=PrimarySubnetAZ,ParameterValue=${REGION}a \
@@ -139,8 +136,8 @@ Monitoring type options: `self-hosting` | `amp-only` | `amp+amg` | `none`
 **3b. Generate cluster config**
 
 ```bash
-source environment-variables.sh
-envsubst < cluster-config.yaml.template > cluster-config-generated.yaml
+source deployment/templates/environment-variables.sh
+envsubst < deployment/templates/cluster-config.yaml.template > my-cluster-config.yaml
 ```
 
 **3c. Create cluster**
@@ -203,7 +200,7 @@ p6-b200 requires additional setup not included in the standard pcluster AMI. Use
 
 This adds `ib_umad`, `nvlsm`, and `nvidia-fabricmanager` enable — required for NVSwitch fabric initialization on B200. See [config/AMI/](config/AMI/) for details.
 
-For Capacity Block deployments, use `cluster/cluster-config-p6b200.yaml` and `scripts/deploy-p6b200.sh`.
+For Capacity Block deployments, use `deployment/samples/cluster-config-p6b200.yaml` and `scripts/deploy-p6b200.sh`.
 
 ---
 
