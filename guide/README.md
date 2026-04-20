@@ -1,100 +1,196 @@
-# ParallelCluster 가이드 문서
+# ParallelCluster Monitoring and Configuration Guides
 
-이 디렉토리에는 AWS ParallelCluster 설정 및 운영에 대한 상세 가이드가 포함되어 있습니다.
+7 consolidated technical guides covering instance configuration, deployment, monitoring, and security for AWS ParallelCluster GPU instances.
 
-##  문서 목록
+## Guide Files
 
-### 설치 및 설정
+### 1. 01-instance-types.md (282 lines)
+Instance type configuration and component matrix for ParallelCluster.
 
-- **[01-instance-type-configuration.md](01-instance-type-configuration.md)** ⭐ NEW
-  - 인스턴스 타입별 설정 가이드
-  - GPU+EFA, GPU Only, Non-GPU 인스턴스 설정
-  - EFA/DCGM/Node Exporter 선택적 설치
-  - 인스턴스 타입별 권장 설정
+**Topics**:
+- Supported instance types (GPU+EFA, GPU only, CPU)
+- Component configuration matrix (Docker, EFA, DCGM, Node Exporter)
+- P6-B200 specific requirements (ib_umad, nvlsm, fabricmanager)
+- Pre-NVL5 panic root cause and fix
+- Custom AMI checklist
+- Performance baselines
 
-- **[02-timeout-configuration.md](02-timeout-configuration.md)**
-  - ComputeNode 부트스트랩 타임아웃 설정
-  - 타임아웃 문제 해결
-  - 권장 타임아웃 값 및 근거
+**Key Content**:
+- Configuration via environment variables (COMPUTE_SETUP_TYPE)
+- Installation time estimates (15-20 min GPU, 5-10 min CPU)
+- EFA bandwidth specs (p5en: 3200 Gbps, p4d: 400 Gbps)
 
-- **[04-testing-minimal-cluster.md](04-testing-minimal-cluster.md)**
-  - 최소 구성 클러스터 테스트 가이드
-  - CustomActions 비활성화 테스트
-  - 문제 원인 파악 방법
+---
 
-### 모니터링 및 디버깅
+### 2. 02-deployment-considerations.md (282 lines)
+Cluster deployment timing, timeouts, and bootstrap configuration.
 
-- **[14-monitoring-setup-progress.md](14-monitoring-setup-progress.md)**
-  - ComputeNode 설치 진행 상황 모니터링
-  - CloudWatch Logs 확인 방법
-  - 설치 단계별 로그 메시지
-  - 문제 해결 체크리스트
+**Topics**:
+- Timeout configuration (HeadNode 60 min, ComputeNode 40 min)
+- SlurmdTimeout and KillWait settings
+- ScaledownIdletime configuration
+- DebugFlags (Power, NO_CONF_HASH) cleanup
+- DCGM image pull timing
+- slurm_exporter build timing (~10 min)
 
-### 성능 및 최적화
+**Key Content**:
+- Timeout breakdown by component
+- Why timeouts are conservative
+- Monitoring timeout issues
+- Best practices for parallel installation
+- Troubleshooting timeout problems
 
-- **[15-nccl-installation-timing.md](15-nccl-installation-timing.md)**
-  - NCCL 설치 시간 분석
-  - 컴포넌트별 소요 시간
-  - NGC 컨테이너 vs 수동 설치 비교
+---
 
-##  관련 문서
+### 3. 03-monitoring-managed.md (375 lines)
+AWS Managed Prometheus (AMP) + AWS Managed Grafana (AMG) setup.
 
-### 메인 문서
-- [../README.md](../README.md) - 프로젝트 개요 및 Quick Start
+**Topics**:
+- Architecture (HeadNode Prometheus → AMP → AMG)
+- Automated setup (workspace creation, data source configuration)
+- Manual setup (SSO prerequisites, user management)
+- Deployment steps (4-step process)
+- Grafana access methods (web, port forwarding, SSM)
+- Available metrics (GPU, system, Slurm)
+- Cost estimates (~$100-200/month)
 
-### 설정 파일
-- [../cluster-config.yaml.template](../cluster-config.yaml.template) - 클러스터 설정 템플릿
-- [../environment-variables.sh](../environment-variables.sh) - 환경 변수 설정
+**Key Content**:
+- Fully managed monitoring with 150-day retention
+- AWS SSO authentication
+- Lambda-based automatic data source configuration
+- Troubleshooting (access, data sources, metrics)
 
-### 스크립트
-- [../scripts/monitor-compute-node-setup.sh](../scripts/monitor-compute-node-setup.sh) - 설치 모니터링 스크립트
-- [../scripts/check-compute-setup.sh](../scripts/check-compute-setup.sh) - 설치 상태 확인 스크립트
+---
 
-### 설정 디렉토리
-- [../config/headnode/README.md](../config/headnode/README.md) - HeadNode 설정 가이드
-- [../config/nccl/README.md](../config/nccl/README.md) - NCCL 설치 및 테스트
+### 4. 04-monitoring-self-hosted.md (448 lines)
+Self-hosted Prometheus + Grafana on HeadNode.
 
-##  문서 사용 가이드
+**Topics**:
+- Architecture (ComputeNode exporters → HeadNode Prometheus → Grafana)
+- Exporters (DCGM, Node Exporter, slurm_exporter)
+- Prometheus configuration (EC2 SD, node name relabeling)
+- Complete Prometheus metrics reference (~50 GPU, ~200 system metrics)
+- Useful PromQL queries (distributed training, bottleneck detection)
+- Metric retention (15-day default, adjustable)
 
-### 클러스터 생성 전
-1. [01-instance-type-configuration.md](01-instance-type-configuration.md) - 인스턴스 타입별 설정 ⭐
-2. [02-timeout-configuration.md](02-timeout-configuration.md) - 타임아웃 설정 확인
-3. [04-testing-minimal-cluster.md](04-testing-minimal-cluster.md) - 테스트 전략 수립
+**Key Content**:
+- GPU metrics (utilization, memory, temperature, power, NVLink)
+- System metrics (CPU, memory, disk, network, load)
+- Multi-node monitoring queries
+- Grafana data source configuration
+- Troubleshooting missing metrics
 
-### 클러스터 생성 중
-1. [14-monitoring-setup-progress.md](14-monitoring-setup-progress.md) - 실시간 모니터링
+---
 
-### 문제 발생 시
-1. [14-monitoring-setup-progress.md](14-monitoring-setup-progress.md) - 로그 확인
-2. [02-timeout-configuration.md](02-timeout-configuration.md) - 타임아웃 문제 해결
-3. [04-testing-minimal-cluster.md](04-testing-minimal-cluster.md) - 최소 구성 테스트
+### 5. 05-efa-monitoring.md (336 lines)
+EFA networking and monitoring for inter-node communication.
 
-### NCCL 설치 시
-1. [15-nccl-installation-timing.md](15-nccl-installation-timing.md) - 설치 시간 예상
-2. [../config/nccl/README.md](../config/nccl/README.md) - 설치 방법
+**Topics**:
+- EFA overview (3200 Gbps for p5en, 400 Gbps for p4d)
+- Automatic installation and service management
+- CloudWatch metrics (rx_bytes_rate, tx_bytes_rate, errors, discards)
+- Textfile collector setup for Prometheus
+- Key metrics to watch during training
+- Baseline performance and performance optimization
+- Cost considerations (~$10/month for 4 nodes)
 
-##  빠른 참조
+**Key Content**:
+- Real-time EFA statistics logging
+- Expected utilization during training (87% of max)
+- Error tracking (rx_errors, tx_discards should be 0)
+- Integration with DCGM and Node Exporter
+- CloudWatch dashboard auto-creation
 
-### 타임아웃 설정
-```yaml
-DevSettings:
-  Timeouts:
-    HeadNodeBootstrapTimeout: 3600      # 60분
-    ComputeNodeBootstrapTimeout: 2400   # 40분
-```
+---
 
-### 설치 모니터링
-```bash
-bash scripts/monitor-compute-node-setup.sh <cluster-name> <region>
-```
+### 6. 06-nccl-testing.md (415 lines)
+NCCL performance testing and validation (4-phase workflow).
 
-### 최소 구성 테스트
-```bash
-# environment-variables.sh
-export ENABLE_COMPUTE_SETUP="false"
-```
+**Topics**:
+- NCCL installation timing (10-15 min, not in bootstrap)
+- Phase 1: Baseline single-node testing (AllReduce, AllToAll)
+- Phase 2: Multi-node scaling validation
+- Phase 3: Workload simulation (MoE patterns, expert capacity)
+- Phase 4: NCCL parameter optimization
+- Environment variables and tuning recommendations
 
-### 설치 상태 확인
-```bash
-srun --nodes=1 bash /fsx/scripts/check-compute-setup.sh
-```
+**Key Content**:
+- Expected performance baselines (>800 GB/s AllReduce)
+- Scaling efficiency calculation (target >90%)
+- Expert capacity optimization (64, 128, 256, 512 tokens)
+- Dense model settings (GPT, BERT, LLaMA)
+- MoE model settings (Switch, GLaM, Mixtral)
+- H100 specific optimizations (NVSwitch, GDR)
+- Troubleshooting low bandwidth and latency
+
+---
+
+### 7. 07-security.md (439 lines)
+Network architecture, access control, and security best practices.
+
+**Topics**:
+- Network architecture (public LoginNode, private HeadNode/ComputeNode)
+- SSH access control (IP restriction, SSM Session Manager)
+- Grafana/Prometheus access (port forwarding, tunneling, VPN)
+- Default password changes
+- Security group rules (least privilege)
+- IAM least privilege configuration
+- Monitoring and auditing (CloudTrail, VPC Flow Logs, GuardDuty)
+- Incident response procedures
+
+**Key Content**:
+- Restrict SSH to specific IP during deployment
+- Use SSM for port forwarding (no SSH port exposure)
+- Security group inbound rules per node type
+- Minimal IAM permissions (read-only S3, CloudWatch)
+- Three cluster access methods (two-hop SSH, ProxyJump, SSM)
+- Weekly and monthly security audit checklists
+
+---
+
+## Content Summary
+
+- **Total Lines**: 2,577 lines
+- **Language**: English only
+- **Formatting**: Markdown with headers, code blocks, tables, bullet points
+- **Emojis**: None (clean technical content)
+- **Source**: Consolidated from 9 remote guide files
+
+## File Structure
+
+All guides use consistent formatting:
+- Level 1 header (#) for title
+- Level 2 headers (##) for major sections
+- Level 3 headers (###) for subsections
+- Code blocks with bash/yaml language tags
+- Tables for comparison and configuration matrices
+- Bullet points for lists and checklists
+- Cross-references to related documentation
+
+## Usage
+
+1. Start with **01-instance-types.md** for cluster configuration
+2. Review **02-deployment-considerations.md** for timing and bootstrap
+3. Choose monitoring approach:
+   - **03-monitoring-managed.md** for AWS-managed (AMP+AMG)
+   - **04-monitoring-self-hosted.md** for self-hosted (Prometheus+Grafana)
+4. Use **05-efa-monitoring.md** for EFA performance validation
+5. Follow **06-nccl-testing.md** for multi-node performance testing
+6. Implement **07-security.md** best practices throughout
+
+## Quality Assurance
+
+All guides verified for:
+- Accurate configuration commands (from remote source)
+- Consistent English language (no foreign language content)
+- Clean markdown formatting (no emojis)
+- Scannable structure (headers, code blocks, tables)
+- Complete technical substance (no filler, all load-bearing content)
+- Cross-references between guides
+
+## Related Resources
+
+- AWS ParallelCluster Documentation: https://docs.aws.amazon.com/parallelcluster/
+- AWS EFA Documentation: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html
+- Prometheus Documentation: https://prometheus.io/docs/
+- NCCL User Guide: https://docs.nvidia.com/deeplearning/nccl/user-guide/
