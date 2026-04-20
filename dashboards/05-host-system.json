@@ -1,6 +1,6 @@
 {
   "uid": "p6-host-system",
-  "title": "6. Host System \u2014 CPU / Memory / PSI",
+  "title": "5. Host System \u2014 CPU / Memory / PSI",
   "schemaVersion": 39,
   "version": 1,
   "refresh": "30s",

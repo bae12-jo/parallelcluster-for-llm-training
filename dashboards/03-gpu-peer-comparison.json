@@ -1,6 +1,6 @@
 {
-  "uid": "p6-job-overview",
-  "title": "3. Job Overview",
+  "uid": "p6-gpu-peer",
+  "title": "3. GPU Status \u2014 Peer Comparison",
   "schemaVersion": 39,
   "version": 1,
   "refresh": "30s",
@@ -90,10 +90,10 @@
     },
     {
       "id": 3,
-      "title": "GPU Temperature per Node (\u00b0C)",
+      "title": "GPU Temp per Node (\u00b0C)",
       "type": "timeseries",
       "gridPos": {
-        "h": 7,
+        "h": 8,
         "w": 12,
         "x": 0,
         "y": 8
@@ -130,7 +130,7 @@
       "title": "Power Usage per Node (W)",
       "type": "timeseries",
       "gridPos": {
-        "h": 7,
+        "h": 8,
         "w": 12,
         "x": 12,
         "y": 8
@@ -145,6 +145,48 @@
       "fieldConfig": {
         "defaults": {
           "unit": "watt",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 5
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "GPU Hardware Faults (ECC Remapped Rows / Row Remap Failure)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "targets": [
+        {
+          "expr": "max by (node_name) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS)",
+          "legendFormat": "{{node_name}} uncorrectable",
+          "refId": "A"
+        },
+        {
+          "expr": "max by (node_name) (DCGM_FI_DEV_ROW_REMAP_FAILURE)",
+          "legendFormat": "{{node_name}} remap_fail",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
           "custom": {
             "lineWidth": 1,
             "fillOpacity": 5

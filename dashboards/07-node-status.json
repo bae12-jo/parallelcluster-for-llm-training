@@ -1,6 +1,6 @@
 {
   "uid": "p6-node-status",
-  "title": "8. Node Status",
+  "title": "7. Node Status",
   "schemaVersion": 39,
   "version": 1,
   "refresh": "30s",

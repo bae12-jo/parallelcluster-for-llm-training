@@ -453,16 +453,16 @@ dashboards = [
     ("02-job-queue.json",
      dash("p6-job-queue", "2. Slurm / Job", d2_panels)),
 
-    ("04-gpu-peer-comparison.json",
-     dash("p6-gpu-peer", "4. GPU Status — Peer Comparison", d4_panels)),
-    ("05-efa-nvlink.json",
-     dash("p6-efa-nvlink", "5. Inter-Node Communication — EFA & NVLink", d5_panels)),
-    ("06-host-system.json",
-     dash("p6-host-system", "6. Host System — CPU / Memory / PSI", d6_panels)),
-    ("07-z-score-outlier.json",
-     dash("p6-zscore", "7. Peer Outlier Detection — Z-Score", d7_panels)),
-    ("08-node-status.json",
-     dash("p6-node-status", "8. Node Status", d8_panels)),
+    ("03-gpu-peer-comparison.json",
+     dash("p6-gpu-peer", "3. GPU Status — Peer Comparison", d4_panels)),
+    ("04-efa-nvlink.json",
+     dash("p6-efa-nvlink", "4. Inter-Node Communication — EFA & NVLink", d5_panels)),
+    ("05-host-system.json",
+     dash("p6-host-system", "5. Host System — CPU / Memory / PSI", d6_panels)),
+    ("06-z-score-outlier.json",
+     dash("p6-zscore", "6. Peer Outlier Detection — Z-Score", d7_panels)),
+    ("07-node-status.json",
+     dash("p6-node-status", "7. Node Status", d8_panels)),
 ]
 
 for fname, d in dashboards:

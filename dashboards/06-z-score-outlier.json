@@ -1,6 +1,6 @@
 {
-  "uid": "p6-gpu-peer",
-  "title": "4. GPU Status \u2014 Peer Comparison",
+  "uid": "p6-zscore",
+  "title": "6. Peer Outlier Detection \u2014 Z-Score",
   "schemaVersion": 39,
   "version": 1,
   "refresh": "30s",
@@ -16,24 +16,24 @@
   "panels": [
     {
       "id": 1,
-      "title": "GPU Utilization per Node (%)",
+      "title": "GPU Utilization Z-Score (outlier = |z| > 2)",
       "type": "timeseries",
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 24,
         "x": 0,
         "y": 0
       },
       "targets": [
         {
-          "expr": "avg by (node_name) (DCGM_FI_DEV_GPU_UTIL)",
+          "expr": "(avg by (node_name) (DCGM_FI_DEV_GPU_UTIL) - scalar(avg(avg by (node_name) (DCGM_FI_DEV_GPU_UTIL)))) / (scalar(stddev(avg by (node_name) (DCGM_FI_DEV_GPU_UTIL))) + 0.0001)",
           "legendFormat": "{{node_name}}",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
+          "unit": "short",
           "custom": {
             "lineWidth": 1,
             "fillOpacity": 5
@@ -53,24 +53,24 @@
     },
     {
       "id": 2,
-      "title": "GPU Memory Used per Node (MiB)",
+      "title": "EFA RX Bandwidth Z-Score",
       "type": "timeseries",
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 0
+        "w": 24,
+        "x": 0,
+        "y": 8
       },
       "targets": [
         {
-          "expr": "sum by (node_name) (DCGM_FI_DEV_FB_USED)",
+          "expr": "(sum by (node_name) (rate(node_efa_hw_rx_bytes[1m])) - scalar(avg(sum by (node_name) (rate(node_efa_hw_rx_bytes[1m]))))) / (scalar(stddev(sum by (node_name) (rate(node_efa_hw_rx_bytes[1m])))) + 0.0001)",
           "legendFormat": "{{node_name}}",
           "refId": "A"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "decmbytes",
+          "unit": "short",
           "custom": {
             "lineWidth": 1,
             "fillOpacity": 5
@@ -90,98 +90,19 @@
     },
     {
       "id": 3,
-      "title": "GPU Temp per Node (\u00b0C)",
+      "title": "CPU Utilization Z-Score",
       "type": "timeseries",
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
-      },
-      "targets": [
-        {
-          "expr": "max by (node_name) (DCGM_FI_DEV_GPU_TEMP)",
-          "legendFormat": "{{node_name}}",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "celsius",
-          "custom": {
-            "lineWidth": 1,
-            "fillOpacity": 5
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi"
-        },
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom"
-        }
-      }
-    },
-    {
-      "id": 4,
-      "title": "Power Usage per Node (W)",
-      "type": "timeseries",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 8
-      },
-      "targets": [
-        {
-          "expr": "sum by (node_name) (DCGM_FI_DEV_POWER_USAGE)",
-          "legendFormat": "{{node_name}}",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "watt",
-          "custom": {
-            "lineWidth": 1,
-            "fillOpacity": 5
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi"
-        },
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom"
-        }
-      }
-    },
-    {
-      "id": 5,
-      "title": "GPU Hardware Faults (ECC Remapped Rows / Row Remap Failure)",
-      "type": "timeseries",
-      "gridPos": {
-        "h": 7,
         "w": 24,
         "x": 0,
         "y": 16
       },
       "targets": [
         {
-          "expr": "max by (node_name) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS)",
-          "legendFormat": "{{node_name}} uncorrectable",
+          "expr": "(avg by (node_name) (rate(node_cpu_seconds_total{mode!=\"idle\"}[5m])) - scalar(avg(avg by (node_name) (rate(node_cpu_seconds_total{mode!=\"idle\"}[5m]))))) / (scalar(stddev(avg by (node_name) (rate(node_cpu_seconds_total{mode!=\"idle\"}[5m])))) + 0.0001)",
+          "legendFormat": "{{node_name}}",
           "refId": "A"
-        },
-        {
-          "expr": "max by (node_name) (DCGM_FI_DEV_ROW_REMAP_FAILURE)",
-          "legendFormat": "{{node_name}} remap_fail",
-          "refId": "B"
         }
       ],
       "fieldConfig": {
