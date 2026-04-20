@@ -184,6 +184,14 @@ DCGM Exporter 4.5.2 supports A10G, H100, H200, B200, GB200.
 
 Prometheus uses EC2 service discovery via `parallelcluster:cluster-name` and `slurm:hostname` tags — no manual target configuration needed.
 
+## Dashboards
+
+![Dashboard Sample](dashboards/dashboard-sample.png)
+
+8 pre-built dashboards covering cluster state, GPU performance (DCGM), EFA network, host system, and statistical outlier detection. See [dashboards/](dashboards/) to regenerate or customize.
+
+---
+
 ### AWS Managed (amp-only / amp+amg mode)
 
 See [guide/06-amp-amg-setup.md](guide/06-amp-amg-setup.md).
