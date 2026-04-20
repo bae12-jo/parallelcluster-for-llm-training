@@ -11,14 +11,14 @@ export HOME=/root
 export GOPATH=/root/go
 export GOMODCACHE=/root/go/pkg/mod
 export GOCACHE=/root/.cache/go-build
-export PATH=$PATH:/usr/local/go/bin
+export PATH=/usr/local/go/bin:$PATH
 
 apt-get install -y git -qq 2>/dev/null || true
 mkdir -p "${GOPATH}" "${GOCACHE}"
 
 # Install Go if not present
 # Always remove old Go and reinstall to avoid version mismatch
-rm -rf /usr/local/go
+rm -rf /usr/local/go /usr/lib/go-* /usr/bin/go /usr/bin/gofmt 2>/dev/null || true
 if true; then
   curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -xz -C /usr/local
 fi
@@ -28,6 +28,8 @@ rm -rf /tmp/pse
 git clone --depth 1 --branch "v${SLURM_EXPORTER_VERSION}" \
   https://github.com/rivosinc/prometheus-slurm-exporter.git /tmp/pse
 cd /tmp/pse
+# Patch go.mod: strip patch version (e.g. 1.23.1 → 1.23) for older Go toolchain compatibility
+sed -i 's/^go [0-9]\+\.[0-9]\+\.[0-9]\+/go 1.23/' go.mod
 go build -o /usr/local/bin/slurm_exporter .
 chmod +x /usr/local/bin/slurm_exporter
 

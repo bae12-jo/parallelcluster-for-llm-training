@@ -1,0 +1,128 @@
+# ParallelCluster config for p6-b200.48xlarge validation — us-east-2 (Ohio)
+# Capacity Block: cr-0743c66ae5fe0b223
+# 2x p6-b200.48xlarge nodes
+
+Region: us-east-2
+Image:
+  Os: ubuntu2204
+
+Imds:
+  ImdsSupport: v2.0
+
+HeadNode:
+  InstanceType: m5.2xlarge
+  Networking:
+    SubnetId: <PRIVATE_SUBNET_ID>
+    AdditionalSecurityGroups:
+      - <HEADNODE_SG>
+  Ssh:
+    KeyName: <KEY_PAIR>
+  LocalStorage:
+    RootVolume:
+      Size: 500
+      DeleteOnTermination: true
+  Iam:
+    AdditionalIamPolicies:
+      - Policy: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      - Policy: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+      - Policy: arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+  CustomActions:
+    OnNodeConfigured:
+      Script: s3://<S3_BUCKET>/scripts/setup-headnode.sh
+      Args:
+        - <S3_BUCKET>
+
+LoginNodes:
+  Pools:
+    - Name: login
+      Count: 1
+      InstanceType: m5.large
+      Networking:
+        SubnetIds:
+          - <PUBLIC_SUBNET_ID>
+        AdditionalSecurityGroups:
+          - <LOGIN_SG>
+      Iam:
+        AdditionalIamPolicies:
+          - Policy: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+          - Policy: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+
+Scheduling:
+  Scheduler: slurm
+  SlurmSettings:
+    ScaledownIdletime: 600
+    QueueUpdateStrategy: DRAIN
+    CustomSlurmSettings:
+      - KillWait: '120'
+      - SlurmdTimeout: '600'
+      - UnkillableStepTimeout: '600'
+      - DebugFlags: 'Power,NO_CONF_HASH'
+  SlurmQueues:
+    - Name: p6b200
+      Image:
+        CustomAmi: ami-01cda51fd7b41c499  # DLAMI Base Ubuntu22.04 + driver 580.126.09 + FM
+      CapacityType: CAPACITY_BLOCK
+      Networking:
+        SubnetIds:
+          - <PRIVATE_SUBNET_ID>
+        AdditionalSecurityGroups:
+          - <COMPUTE_SG>
+      ComputeSettings:
+        LocalStorage:
+          RootVolume:
+            Size: 500
+          EphemeralVolume:
+            MountDir: /scratch
+      Iam:
+        AdditionalIamPolicies:
+          - Policy: arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+          - Policy: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+          - Policy: arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+          - Policy: arn:aws:iam::<ACCOUNT_ID>:policy/pcluster-compute-node-tagging
+      JobExclusiveAllocation: true
+      ComputeResources:
+        - Name: p6b200-nodes
+          InstanceType: p6-b200.48xlarge
+          MinCount: 2
+          MaxCount: 2
+          CapacityReservationTarget:
+            CapacityReservationId: <CAPACITY_RESERVATION_ID>
+          Efa:
+            Enabled: true
+          HealthChecks:
+            Gpu:
+              Enabled: false
+      CustomActions:
+        OnNodeStart:
+          Script: s3://<S3_BUCKET>/scripts/setup-compute-node-start.sh
+        OnNodeConfigured:
+          Script: s3://<S3_BUCKET>/scripts/setup-compute-node.sh
+          Args:
+            - <S3_BUCKET>
+
+SharedStorage:
+  - MountDir: /fsx
+    Name: fsx
+    StorageType: FsxLustre
+    FsxLustreSettings:
+      FileSystemId: <FSX_ID>
+
+Monitoring:
+  Logs:
+    CloudWatch:
+      Enabled: true
+      RetentionInDays: 14
+  Dashboards:
+    CloudWatch:
+      Enabled: false
+
+DevSettings:
+  Timeouts:
+    HeadNodeBootstrapTimeout: 3600
+    ComputeNodeBootstrapTimeout: 3600  # 60 min — DCGM image pull (4-5GB) + nvidia-container-toolkit
+
+Tags:
+  - Key: Project
+    Value: gpu-cluster-for-ml
+  - Key: Owner
+    Value: csbailey

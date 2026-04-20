@@ -228,9 +228,109 @@ d1_panels = [
     ts(10, "EFA RX Errors",
        [t('sum by (node_name) (rate(node_efa_hw_rx_drops[5m]))', "{{node_name}}")],
        unit="short", x=12, y=11, w=12, h=7),
-    tbl(11, "Node Down / Draining Reasons",
-       [t('slurm_node_state_reason{reason!~"none|Not specified|"} == 1', "{{node}} — {{state}}: {{reason}}")],
-       x=0, y=18, w=24, h=6),
+    # Node Down / Draining Reasons — table with color-coded state and sorted columns
+    {
+        "id": 11,
+        "title": "Node Down / Draining Reasons",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 18},
+        "targets": [
+            {
+                "expr": 'slurm_node_state_reason{reason!~"none|Not specified|"} == 1',
+                "instant": True,
+                "refId": "A",
+                "legendFormat": "",
+            }
+        ],
+        "transformations": [
+            # Keep only the label columns we care about
+            {
+                "id": "organize",
+                "options": {
+                    "excludeByName": {
+                        "Time": True, "Value": True, "__name__": True,
+                        "instance": True, "job": True, "node_type": True,
+                    },
+                    "renameByName": {
+                        "node":      "Node (Slurm hostname)",
+                        "node_name": "Node (Prometheus label)",
+                        "state":     "State",
+                        "reason":    "Reason",
+                    },
+                    "indexByName": {
+                        "node":      0,
+                        "node_name": 1,
+                        "state":     2,
+                        "reason":    3,
+                    },
+                }
+            },
+            # Sort by state so down nodes appear first
+            {"id": "sortBy", "options": {"fields": [{"desc": False, "displayName": "State"}]}},
+        ],
+        "fieldConfig": {
+            "defaults": {
+                "custom": {
+                    "displayMode": "auto",
+                    "filterable": True,
+                    "minWidth": 120,
+                },
+            },
+            "overrides": [
+                # State column: color-code by value
+                {
+                    "matcher": {"id": "byName", "options": "State"},
+                    "properties": [
+                        {
+                            "id": "custom.displayMode",
+                            "value": "color-background",
+                        },
+                        {
+                            "id": "thresholds",
+                            "value": {
+                                "mode": "absolute",
+                                "steps": [
+                                    {"color": "green",  "value": None},  # default
+                                ],
+                            },
+                        },
+                        {
+                            "id": "mappings",
+                            "value": [
+                                {"type": "value", "options": {"down":        {"color": "#F2495C", "index": 0}}},
+                                {"type": "value", "options": {"down+drain":  {"color": "#F2495C", "index": 1}}},
+                                {"type": "value", "options": {"drained":     {"color": "#FF9830", "index": 2}}},
+                                {"type": "value", "options": {"draining":    {"color": "#FF9830", "index": 3}}},
+                                {"type": "value", "options": {"drain":       {"color": "#FF9830", "index": 4}}},
+                                {"type": "value", "options": {"idlecloud":   {"color": "#5794F2", "index": 5}}},
+                                {"type": "value", "options": {"idle":        {"color": "#73BF69", "index": 6}}},
+                                {"type": "value", "options": {"allocated":   {"color": "#73BF69", "index": 7}}},
+                                {"type": "value", "options": {"mixed":       {"color": "#73BF69", "index": 8}}},
+                            ],
+                        },
+                    ],
+                },
+                # Node column: wider
+                {
+                    "matcher": {"id": "byName", "options": "Node (Slurm hostname)"},
+                    "properties": [{"id": "custom.width", "value": 220}],
+                },
+                # Reason column: wrap text, fill remaining width
+                {
+                    "matcher": {"id": "byName", "options": "Reason"},
+                    "properties": [
+                        {"id": "custom.width",    "value": 500},
+                        {"id": "custom.displayMode", "value": "auto"},
+                    ],
+                },
+            ],
+        },
+        "options": {
+            "sortBy": [{"desc": False, "displayName": "State"}],
+            "footer": {"show": False},
+            "showHeader": True,
+        },
+    },
 ]
 
 # ── 2. Job Queue ──────────────────────────────────────────────────────────────

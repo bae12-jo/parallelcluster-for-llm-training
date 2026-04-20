@@ -1,0 +1,10 @@
+Build:
+  InstanceType: c5.4xlarge
+  ParentImage: ami-01fbb325eb625fd24  # Deep Learning Base AMI (Ubuntu 22.04) 20260417
+  UpdateOsPackages:
+    Enabled: false
+  Tags:
+    - Key: Project
+      Value: gpu-cluster-for-ml
+    - Key: Owner
+      Value: csbailey

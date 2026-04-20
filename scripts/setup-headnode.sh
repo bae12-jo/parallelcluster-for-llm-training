@@ -169,8 +169,9 @@ systemctl start install-slurm-exporter.service &
 echo "slurm_exporter build queued (runs in background, ~10min)"
 
 # Tag instance for Prometheus EC2 SD
-INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
-REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
+TOKEN=$(curl -s -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" http://169.254.169.254/latest/api/token 2>/dev/null || echo "")
+INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: ${TOKEN}" http://169.254.169.254/latest/meta-data/instance-id)
+REGION=$(curl -s -H "X-aws-ec2-metadata-token: ${TOKEN}" http://169.254.169.254/latest/meta-data/placement/region)
 ${AWS_CLI} ec2 create-tags --region "${REGION}" --resources "${INSTANCE_ID}" \
   --tags Key=parallelcluster:node-type,Value=HeadNode \
          Key=slurm:hostname,Value=headnode 2>/dev/null || true
@@ -210,9 +211,9 @@ done <<< "\${INSTANCES}"
 TAGSCRIPT
 chmod +x /usr/local/bin/tag-compute-nodes.sh
 
-# Register cron: run every 5 minutes
+# Register cron: run every 1 minute (faster hostname tag visibility)
 cat > /etc/cron.d/tag-compute-nodes << 'CRONEOF'
-*/5 * * * * root /usr/local/bin/tag-compute-nodes.sh >> /var/log/tag-compute-nodes.log 2>&1
+* * * * * root /usr/local/bin/tag-compute-nodes.sh >> /var/log/tag-compute-nodes.log 2>&1
 CRONEOF
 
 # ---- Slurm node state + down reason collector ----

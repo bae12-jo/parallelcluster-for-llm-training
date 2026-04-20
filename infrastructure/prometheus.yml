@@ -1,0 +1,65 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: node_exporter
+    ec2_sd_configs:
+      - region: us-east-1
+        port: 9100
+        refresh_interval: 30s
+        filters:
+          - name: tag:parallelcluster:cluster-name
+            values: ['*']
+    relabel_configs:
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: instance
+      - source_labels: [__meta_ec2_tag_parallelcluster_node_type]
+        target_label: node_type
+      # node_name: IP fallback first, then override with "hostname (ip)" if tag exists
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: node_name
+      - source_labels: [__meta_ec2_tag_slurm_hostname, __meta_ec2_private_ip]
+        regex: "(.+);(.+)"
+        replacement: "$1 ($2)"
+        target_label: node_name
+
+  - job_name: dcgm_exporter
+    ec2_sd_configs:
+      - region: us-east-1
+        port: 9400
+        refresh_interval: 30s
+        filters:
+          - name: tag:parallelcluster:node-type
+            values: ['Compute']
+    relabel_configs:
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: instance
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: node_name
+      - source_labels: [__meta_ec2_tag_slurm_hostname, __meta_ec2_private_ip]
+        regex: "(.+);(.+)"
+        replacement: "$1 ($2)"
+        target_label: node_name
+
+  - job_name: slurm_exporter
+    ec2_sd_configs:
+      - region: us-east-1
+        port: 8080
+        refresh_interval: 30s
+        filters:
+          - name: tag:parallelcluster:node-type
+            values: ['HeadNode']
+    relabel_configs:
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: instance
+      - source_labels: [__meta_ec2_private_ip]
+        target_label: node_name
+      - source_labels: [__meta_ec2_tag_slurm_hostname, __meta_ec2_private_ip]
+        regex: "(.+);(.+)"
+        replacement: "$1 ($2)"
+        target_label: node_name

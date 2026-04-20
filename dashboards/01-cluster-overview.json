@@ -427,7 +427,7 @@
       "title": "Node Down / Draining Reasons",
       "type": "table",
       "gridPos": {
-        "h": 6,
+        "h": 8,
         "w": 24,
         "x": 0,
         "y": 18
@@ -435,19 +435,209 @@
       "targets": [
         {
           "expr": "slurm_node_state_reason{reason!~\"none|Not specified|\"} == 1",
-          "legendFormat": "{{node}} \u2014 {{state}}: {{reason}}",
-          "refId": "A"
+          "instant": true,
+          "refId": "A",
+          "legendFormat": ""
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "instance": true,
+              "job": true,
+              "node_type": true
+            },
+            "renameByName": {
+              "node": "Node (Slurm hostname)",
+              "node_name": "Node (Prometheus label)",
+              "state": "State",
+              "reason": "Reason"
+            },
+            "indexByName": {
+              "node": 0,
+              "node_name": 1,
+              "state": 2,
+              "reason": 3
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": [
+              {
+                "desc": false,
+                "displayName": "State"
+              }
+            ]
+          }
         }
       ],
       "fieldConfig": {
-        "defaults": {},
-        "overrides": []
+        "defaults": {
+          "custom": {
+            "displayMode": "auto",
+            "filterable": true,
+            "minWidth": 120
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "State"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "down": {
+                        "color": "#F2495C",
+                        "index": 0
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "down+drain": {
+                        "color": "#F2495C",
+                        "index": 1
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "drained": {
+                        "color": "#FF9830",
+                        "index": 2
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "draining": {
+                        "color": "#FF9830",
+                        "index": 3
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "drain": {
+                        "color": "#FF9830",
+                        "index": 4
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "idlecloud": {
+                        "color": "#5794F2",
+                        "index": 5
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "idle": {
+                        "color": "#73BF69",
+                        "index": 6
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "allocated": {
+                        "color": "#73BF69",
+                        "index": 7
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "mixed": {
+                        "color": "#73BF69",
+                        "index": 8
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Node (Slurm hostname)"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 220
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reason"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 500
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "auto"
+              }
+            ]
+          }
+        ]
       },
       "options": {
-        "sortBy": [],
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "State"
+          }
+        ],
         "footer": {
           "show": false
-        }
+        },
+        "showHeader": true
       }
     }
   ],
