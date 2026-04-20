@@ -6,6 +6,7 @@ Run once on a builder instance (g4dn.2xlarge recommended), then create AMI from 
 | File | Purpose |
 |------|---------|
 | `build-p6b200-ami.sh` | Full AMI build: installs `ib_umad`, `nvlsm`, enables `nvidia-fabricmanager`. Run on a pcluster 3.15 official AMI instance. |
+| `setup-fabric-manager.sh` | Standalone fabric manager installer. Auto-detects driver version, installs matching package. Safe to run on non-NVSwitch instances (g5/g6). |
 
 ---
 
