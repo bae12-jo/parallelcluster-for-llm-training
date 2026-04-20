@@ -258,21 +258,8 @@ d2_panels = [
        unit="short", x=0, y=11, w=24, h=7),
 ]
 
-# ── 3. Job Overview ────────────────────────────────────────────────────────────
-d3_panels = [
-    ts(1, "GPU Utilization per Node (%)",
-       [t('avg by (node_name) (DCGM_FI_DEV_GPU_UTIL)', "{{node_name}}")],
-       unit="percent", x=0, y=0, w=12, h=8),
-    ts(2, "GPU Memory Used per Node (MiB)",
-       [t('sum by (node_name) (DCGM_FI_DEV_FB_USED)', "{{node_name}}")],
-       unit="decmbytes", x=12, y=0, w=12, h=8),
-    ts(3, "GPU Temperature per Node (°C)",
-       [t('max by (node_name) (DCGM_FI_DEV_GPU_TEMP)', "{{node_name}}")],
-       unit="celsius", x=0, y=8, w=12, h=7),
-    ts(4, "Power Usage per Node (W)",
-       [t('sum by (node_name) (DCGM_FI_DEV_POWER_USAGE)', "{{node_name}}")],
-       unit="watt", x=12, y=8, w=12, h=7),
-]
+# ── 3. Job Overview (removed — duplicate of GPU Peer Comparison) ──────────────
+d3_panels = []  # kept for index compatibility; not written to disk
 
 # ── 4. GPU Peer Comparison ────────────────────────────────────────────────────
 d4_panels = [
@@ -465,8 +452,7 @@ dashboards = [
      dash("p6-cluster-overview", "1. Cluster Overview", d1_panels)),
     ("02-job-queue.json",
      dash("p6-job-queue", "2. Slurm / Job", d2_panels)),
-    ("03-job-overview.json",
-     dash("p6-job-overview", "3. Job Overview", d3_panels)),
+
     ("04-gpu-peer-comparison.json",
      dash("p6-gpu-peer", "4. GPU Status — Peer Comparison", d4_panels)),
     ("05-efa-nvlink.json",
