@@ -16,273 +16,13 @@
   "panels": [
     {
       "id": 1,
-      "title": "Nodes Idle",
-      "type": "stat",
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 0,
-        "y": 0
-      },
-      "targets": [
-        {
-          "expr": "slurm_node_count_per_state{state=\"idle\"}",
-          "legendFormat": " ",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto"
-      }
-    },
-    {
-      "id": 2,
-      "title": "Nodes Allocated",
-      "type": "stat",
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 4,
-        "y": 0
-      },
-      "targets": [
-        {
-          "expr": "slurm_node_count_per_state{state=\"allocated\"}",
-          "legendFormat": " ",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto"
-      }
-    },
-    {
-      "id": 3,
-      "title": "Nodes Down",
-      "type": "stat",
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 8,
-        "y": 0
-      },
-      "targets": [
-        {
-          "expr": "slurm_node_count_per_state{state=\"down\"}",
-          "legendFormat": " ",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto"
-      }
-    },
-    {
-      "id": 4,
-      "title": "Nodes Draining",
-      "type": "stat",
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 12,
-        "y": 0
-      },
-      "targets": [
-        {
-          "expr": "slurm_node_count_per_state{state=\"draining\"}",
-          "legendFormat": " ",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto"
-      }
-    },
-    {
-      "id": 5,
-      "title": "CPU Idle Cores",
-      "type": "stat",
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 16,
-        "y": 0
-      },
-      "targets": [
-        {
-          "expr": "slurm_cpus_idle",
-          "legendFormat": " ",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto"
-      }
-    },
-    {
-      "id": 6,
-      "title": "Cluster Load",
-      "type": "stat",
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 20,
-        "y": 0
-      },
-      "targets": [
-        {
-          "expr": "slurm_cpu_load",
-          "legendFormat": " ",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto"
-      }
-    },
-    {
-      "id": 7,
       "title": "GPU Temp Max (\u00b0C)",
       "type": "timeseries",
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 3
+        "y": 0
       },
       "targets": [
         {
@@ -312,14 +52,14 @@
       }
     },
     {
-      "id": 8,
+      "id": 2,
       "title": "SM Clock (MHz)",
       "type": "timeseries",
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 3
+        "y": 0
       },
       "targets": [
         {
@@ -349,14 +89,14 @@
       }
     },
     {
-      "id": 9,
+      "id": 3,
       "title": "XID Errors",
       "type": "timeseries",
       "gridPos": {
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 11
+        "y": 8
       },
       "targets": [
         {
@@ -386,14 +126,14 @@
       }
     },
     {
-      "id": 10,
+      "id": 4,
       "title": "EFA RX Errors",
       "type": "timeseries",
       "gridPos": {
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 11
+        "y": 8
       },
       "targets": [
         {
@@ -421,224 +161,6 @@
           "placement": "bottom"
         }
       }
-    },
-    {
-      "id": 11,
-      "title": "Node Down / Draining Reasons",
-      "type": "table",
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 18
-      },
-      "targets": [
-        {
-          "expr": "slurm_node_state_reason{reason!~\"none|Not specified|\"} == 1",
-          "instant": true,
-          "refId": "A",
-          "legendFormat": ""
-        }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "Value": true,
-              "__name__": true,
-              "instance": true,
-              "job": true,
-              "node_type": true
-            },
-            "renameByName": {
-              "node": "Node (Slurm hostname)",
-              "node_name": "Node (Prometheus label)",
-              "state": "State",
-              "reason": "Reason"
-            },
-            "indexByName": {
-              "node": 0,
-              "node_name": 1,
-              "state": 2,
-              "reason": 3
-            }
-          }
-        },
-        {
-          "id": "sortBy",
-          "options": {
-            "fields": [
-              {
-                "desc": false,
-                "displayName": "State"
-              }
-            ]
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "displayMode": "auto",
-            "filterable": true,
-            "minWidth": 120
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "State"
-            },
-            "properties": [
-              {
-                "id": "custom.displayMode",
-                "value": "color-background"
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "down": {
-                        "color": "#F2495C",
-                        "index": 0
-                      }
-                    }
-                  },
-                  {
-                    "type": "value",
-                    "options": {
-                      "down+drain": {
-                        "color": "#F2495C",
-                        "index": 1
-                      }
-                    }
-                  },
-                  {
-                    "type": "value",
-                    "options": {
-                      "drained": {
-                        "color": "#FF9830",
-                        "index": 2
-                      }
-                    }
-                  },
-                  {
-                    "type": "value",
-                    "options": {
-                      "draining": {
-                        "color": "#FF9830",
-                        "index": 3
-                      }
-                    }
-                  },
-                  {
-                    "type": "value",
-                    "options": {
-                      "drain": {
-                        "color": "#FF9830",
-                        "index": 4
-                      }
-                    }
-                  },
-                  {
-                    "type": "value",
-                    "options": {
-                      "idlecloud": {
-                        "color": "#5794F2",
-                        "index": 5
-                      }
-                    }
-                  },
-                  {
-                    "type": "value",
-                    "options": {
-                      "idle": {
-                        "color": "#73BF69",
-                        "index": 6
-                      }
-                    }
-                  },
-                  {
-                    "type": "value",
-                    "options": {
-                      "allocated": {
-                        "color": "#73BF69",
-                        "index": 7
-                      }
-                    }
-                  },
-                  {
-                    "type": "value",
-                    "options": {
-                      "mixed": {
-                        "color": "#73BF69",
-                        "index": 8
-                      }
-                    }
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Node (Slurm hostname)"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 220
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Reason"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 500
-              },
-              {
-                "id": "custom.displayMode",
-                "value": "auto"
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "sortBy": [
-          {
-            "desc": false,
-            "displayName": "State"
-          }
-        ],
-        "footer": {
-          "show": false
-        },
-        "showHeader": true
-      }
     }
   ],
   "templating": {
@@ -661,7 +183,7 @@
       "targetBlank": false
     },
     {
-      "title": "Job Queue",
+      "title": "Slurm / Job",
       "url": "/d/p6-job-queue",
       "type": "link",
       "targetBlank": false
@@ -687,6 +209,12 @@
     {
       "title": "Z-Score",
       "url": "/d/p6-zscore",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Node Status",
+      "url": "/d/p6-node-status",
       "type": "link",
       "targetBlank": false
     }

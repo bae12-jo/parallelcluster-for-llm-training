@@ -71,11 +71,13 @@ def dash(uid, title, panels, tags=None, variables=None):
             for d, slug in [
                 ("Overview", "overview"),
                 ("Cluster", "cluster-overview"),
-                ("Job Queue", "job-queue"),
+                ("Slurm / Job", "job-queue"),
                 ("GPU Peer", "gpu-peer"),
                 ("EFA/NVLink", "efa-nvlink"),
                 ("Host System", "host-system"),
                 ("Z-Score", "zscore"),
+                ("Node Status", "node-status"),
+
             ]
         ]
     }
@@ -97,7 +99,7 @@ def yellow_stat(id, title, expr, x, y, w=3, h=2):
 
 def node_stat(id, title, state, color, x, y, w=3, h=3):
     # green=healthy, red=problem, yellow=warning, blue=other
-    # show value regardless of 0; color only activates when >0 (except green)
+    # use regex match to handle compound states (e.g. down~ = down+cloud)
     if color == "green":
         th = {"mode": "absolute", "steps": [{"color": "green", "value": None}]}
     elif color == "red":
@@ -109,40 +111,40 @@ def node_stat(id, title, state, color, x, y, w=3, h=3):
     return {
         "id": id, "title": title, "type": "stat",
         "gridPos": {"h": h, "w": w, "x": x, "y": y},
-        "targets": [{"expr": f'slurm_node_count_per_state{{state="{state}"}}', "legendFormat": " ", "refId": "A", "instant": True}],
+        "targets": [{"expr": f'sum(slurm_node_count_per_state{{state=~"{state}.*"}}) or vector(0)', "legendFormat": " ", "refId": "A", "instant": True}],
         "fieldConfig": {"defaults": {"unit": "none", "thresholds": th, "noValue": "0"}, "overrides": []},
         "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "textMode": "auto", "orientation": "auto", "justifyMode": "center"}
     }
 
 d0_panels = [
-    # ── Node State Overview — 6×w=4 grid (scales to 1000+ nodes) ──
-    # Row 1 (y=0): Core healthy states — 6 × w=4 = 24
-    node_stat(1,  "Allocated",      "allocated",      "green",  x=0,  y=0, w=4, h=4),
-    node_stat(2,  "Idle",           "idle",           "green",  x=4,  y=0, w=4, h=4),
-    node_stat(3,  "Mixed",          "mixed",          "green",  x=8,  y=0, w=4, h=4),
-    node_stat(4,  "Completing",     "completing",     "green",  x=12, y=0, w=4, h=4),
-    stat(5,  "CPU Idle Cores", 'slurm_cpus_idle',     "none",   x=16, y=0, w=4, h=4),
-    stat(6,  "Cluster Load",   'slurm_cpu_load',      "short",  x=20, y=0, w=4, h=4),
-    # Row 2 (y=4): Problem + Warning + Total — 6 × w=4 = 24
-    node_stat(9,  "Down",           "down",           "red",    x=0,  y=4, w=4, h=4),
-    node_stat(10, "Fail / Failing", "fail",           "red",    x=4,  y=4, w=4, h=4),
-    node_stat(11, "Not Responding", "not_responding", "red",    x=8,  y=4, w=4, h=4),
-    node_stat(12, "Drained",        "drained",        "yellow", x=12, y=4, w=4, h=4),
-    node_stat(13, "Draining",       "draining",       "yellow", x=16, y=4, w=4, h=4),
-    stat(14, "Total Nodes",    'sum(slurm_node_count_per_state)', "none", x=20, y=4, w=4, h=4),
-    # Row 3 (y=8): Power/other — 6 × w=4 = 24
-    node_stat(40, "Maint",          "maint",          "yellow", x=0,  y=8, w=4, h=3),
-    node_stat(41, "Powering Up",    "powering_up",    "blue",   x=4,  y=8, w=4, h=3),
-    node_stat(42, "Powered Down",   "powered_down",   "blue",   x=8,  y=8, w=4, h=3),
-    node_stat(43, "Power Down",     "power_down",     "blue",   x=12, y=8, w=4, h=3),
-    node_stat(44, "Unknown",        "unknown",        "blue",   x=16, y=8, w=4, h=3),
-    node_stat(45, "Planned/Reserved", "planned",      "green",  x=20, y=8, w=4, h=3),
+    # ── Row 0 (y=0): 한줄 요약 — Healthy / Problem / Total / CPU / Load ──
+    {
+        "id": 50, "title": "🟢 Healthy Nodes",
+        "description": "idle + allocated + mixed + completing + planned",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [{"expr": 'sum(slurm_node_count_per_state{state=~"idle.*|allocated.*|mixed.*|completing.*|planned.*"}) or vector(0)', "legendFormat": " ", "refId": "A", "instant": True}],
+        "fieldConfig": {"defaults": {"unit": "none", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": None}]}, "noValue": "0"}, "overrides": []},
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "textMode": "auto", "justifyMode": "center"},
+    },
+    {
+        "id": 51, "title": "🔴 Problem Nodes",
+        "description": "down + fail + not_responding + drained + draining + maint + inval",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [{"expr": 'sum(slurm_node_count_per_state{state=~"down.*|fail.*|not_responding.*|drained.*|draining.*|maint.*|inval.*"}) or vector(0)', "legendFormat": " ", "refId": "A", "instant": True}],
+        "fieldConfig": {"defaults": {"unit": "none", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": None}, {"color": "red", "value": 1}]}, "noValue": "0"}, "overrides": []},
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "textMode": "auto", "justifyMode": "center"},
+    },
+    stat(52, "Total Nodes",   'sum(slurm_node_count_per_state)',  "none",  x=12, y=0, w=4, h=4),
+    stat(53, "CPU Idle Cores",'slurm_cpus_idle',                  "none",  x=16, y=0, w=4, h=4),
+    stat(54, "Cluster Load",  'slurm_cpu_load',                   "short", x=20, y=0, w=4, h=4),
 
-    # ── y=9: Node State History + Node Utilization ──
+    # ── Row 1 (y=4): Node State History + Node Utilization ──
     {
         "id": 30, "title": "Node State History",
         "type": "timeseries",
-        "gridPos": {"h": 8, "w": 14, "x": 0, "y": 11},
+        "gridPos": {"h": 8, "w": 14, "x": 0, "y": 4},
         "targets": [
             {"expr": 'slurm_node_count_per_state', "legendFormat": "{{state}}", "refId": "A"},
         ],
@@ -152,16 +154,14 @@ d0_panels = [
         },
         "options": {"tooltip": {"mode": "multi"}, "legend": {"displayMode": "list", "placement": "bottom"}}
     },
-
-    # ── y=6: Node Utilization ──
     {
         "id": 21, "title": "Node Utilization (Active vs Total)",
         "description": "Active = ALLOCATED + MIXED + COMPLETING. Gap = idle capacity.",
         "type": "timeseries",
-        "gridPos": {"h": 8, "w": 10, "x": 14, "y": 11},
+        "gridPos": {"h": 8, "w": 10, "x": 14, "y": 4},
         "targets": [
             {"expr": 'sum(slurm_node_count_per_state)', "legendFormat": "Total nodes", "refId": "A"},
-            {"expr": 'sum(slurm_node_count_per_state{state=~"allocated|mixed|completing"})', "legendFormat": "Active nodes (alloc+mixed+completing)", "refId": "B"},
+            {"expr": 'sum(slurm_node_count_per_state{state=~"allocated.*|mixed.*|completing.*"})', "legendFormat": "Active nodes", "refId": "B"},
         ],
         "fieldConfig": {
             "defaults": {"unit": "none", "custom": {"lineWidth": 2, "fillOpacity": 5}},
@@ -170,185 +170,89 @@ d0_panels = [
         "options": {"tooltip": {"mode": "multi"}, "legend": {"displayMode": "list", "placement": "bottom"}}
     },
 
-    # ── Row 3: GPU ──
+    # ── Row 2 (y=12): GPU ──
     ts(22, "GPU Utilization per Node (%)",
        [t('avg by (node_name) (DCGM_FI_DEV_GPU_UTIL)', "{{node_name}}")],
-       unit="percent", x=0, y=19, w=8, h=7),
+       unit="percent", x=0, y=12, w=8, h=7),
     ts(23, "GPU Temp Max per Node (°C)",
        [t('max by (node_name) (DCGM_FI_DEV_GPU_TEMP)', "{{node_name}}")],
-       unit="celsius", x=8, y=19, w=8, h=7),
+       unit="celsius", x=8, y=12, w=8, h=7),
     ts(24, "GPU Memory Used per Node (MiB)",
        [t('sum by (node_name) (DCGM_FI_DEV_FB_USED)', "{{node_name}}")],
-       unit="decmbytes", x=16, y=19, w=8, h=7),
+       unit="decmbytes", x=16, y=12, w=8, h=7),
 
-    # ── Row 4: Network + CPU ──
+    # ── Row 3 (y=19): EFA + CPU ──
     ts(25, "EFA RX Bandwidth per Node (MB/s)",
        [t('sum by (node_name) (rate(node_efa_hw_rx_bytes[1m])) / 1e6', "{{node_name}}")],
-       unit="MBs", x=0, y=26, w=8, h=7),
+       unit="MBs", x=0, y=19, w=8, h=7),
     ts(26, "EFA TX Bandwidth per Node (MB/s)",
        [t('sum by (node_name) (rate(node_efa_hw_tx_bytes[1m])) / 1e6', "{{node_name}}")],
-       unit="MBs", x=8, y=26, w=8, h=7),
+       unit="MBs", x=8, y=19, w=8, h=7),
     ts(27, "CPU Utilization per Node (%)",
        [t('100 - (avg by (node_name) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)', "{{node_name}}")],
-       unit="percent", x=16, y=26, w=8, h=7),
+       unit="percent", x=16, y=19, w=8, h=7),
 
-    # ── Row 5: Memory + Storage + Faults ──
+    # ── Row 4 (y=26): Memory + Storage + GPU Faults ──
     ts(28, "Memory Usage per Node (GiB)",
        [t('avg by (node_name) (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 1073741824', "{{node_name}}")],
-       unit="bytes", x=0, y=33, w=8, h=7),
+       unit="bytes", x=0, y=26, w=8, h=7),
     ts(29, "Storage I/O (MiB/s)",
        [t('sum by (node_name) (rate(node_disk_read_bytes_total{device=~"nvme.*"}[5m])) / 1048576', "{{node_name}} read"),
         t('sum by (node_name) (rate(node_disk_written_bytes_total{device=~"nvme.*"}[5m])) / 1048576', "{{node_name}} write")],
-       unit="MBs", x=8, y=33, w=8, h=7),
+       unit="MBs", x=8, y=26, w=8, h=7),
     ts(30, "GPU Hardware Faults (ECC / Remap)",
        [t('max by (node_name) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS)', "{{node_name}} uncorrectable"),
         t('max by (node_name) (DCGM_FI_DEV_ROW_REMAP_FAILURE)', "{{node_name}} remap_fail")],
-       unit="short", x=16, y=33, w=8, h=7),
+       unit="short", x=16, y=26, w=8, h=7),
 ]
 
-# ── 1. Cluster Overview ────────────────────────────────────────────────────────
+# ── 1. Cluster Overview — GPU/EFA anomaly detection ───────────────────────────
 d1_panels = [
-    stat(1,  "Nodes Idle",      'slurm_node_count_per_state{state="idle"}',      "none", x=0,  y=0, w=4, h=3),
-    stat(2,  "Nodes Allocated", 'slurm_node_count_per_state{state="allocated"}', "none", x=4,  y=0, w=4, h=3),
-    stat(3,  "Nodes Down",      'slurm_node_count_per_state{state="down"}',      "none", x=8,  y=0, w=4, h=3,
-         thresholds={"mode":"absolute","steps":[{"color":"green","value":None},{"color":"red","value":1}]}),
-    stat(4,  "Nodes Draining",  'slurm_node_count_per_state{state="draining"}',  "none", x=12, y=0, w=4, h=3,
-         thresholds={"mode":"absolute","steps":[{"color":"green","value":None},{"color":"yellow","value":1}]}),
-    stat(5,  "CPU Idle Cores",       'slurm_cpus_idle',                               "none", x=16, y=0, w=4, h=3),
-    stat(6,  "Cluster Load",    'slurm_cpu_load',                                "short",x=20, y=0, w=4, h=3),
-    ts(7, "GPU Temp Max (°C)",
+    ts(1, "GPU Temp Max (°C)",
        [t('max by (node_name) (DCGM_FI_DEV_GPU_TEMP)', "{{node_name}}")],
-       unit="celsius", x=0, y=3, w=12, h=8),
-    ts(8, "SM Clock (MHz)",
+       unit="celsius", x=0, y=0, w=12, h=8),
+    ts(2, "SM Clock (MHz)",
        [t('avg by (node_name) (DCGM_FI_DEV_SM_CLOCK)', "{{node_name}}")],
-       unit="short", x=12, y=3, w=12, h=8),
-    ts(9, "XID Errors",
+       unit="short", x=12, y=0, w=12, h=8),
+    ts(3, "XID Errors",
        [t('max by (node_name) (DCGM_FI_DEV_UNCORRECTABLE_REMAPPED_ROWS)', "{{node_name}} uncorrectable")],
-       unit="short", x=0, y=11, w=12, h=7),
-    ts(10, "EFA RX Errors",
+       unit="short", x=0, y=8, w=12, h=7),
+    ts(4, "EFA RX Errors",
        [t('sum by (node_name) (rate(node_efa_hw_rx_drops[5m]))', "{{node_name}}")],
-       unit="short", x=12, y=11, w=12, h=7),
-    # Node Down / Draining Reasons — table with color-coded state and sorted columns
-    {
-        "id": 11,
-        "title": "Node Down / Draining Reasons",
-        "type": "table",
-        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 18},
-        "targets": [
-            {
-                "expr": 'slurm_node_state_reason{reason!~"none|Not specified|"} == 1',
-                "instant": True,
-                "refId": "A",
-                "legendFormat": "",
-            }
-        ],
-        "transformations": [
-            # Keep only the label columns we care about
-            {
-                "id": "organize",
-                "options": {
-                    "excludeByName": {
-                        "Time": True, "Value": True, "__name__": True,
-                        "instance": True, "job": True, "node_type": True,
-                    },
-                    "renameByName": {
-                        "node":      "Node (Slurm hostname)",
-                        "node_name": "Node (Prometheus label)",
-                        "state":     "State",
-                        "reason":    "Reason",
-                    },
-                    "indexByName": {
-                        "node":      0,
-                        "node_name": 1,
-                        "state":     2,
-                        "reason":    3,
-                    },
-                }
-            },
-            # Sort by state so down nodes appear first
-            {"id": "sortBy", "options": {"fields": [{"desc": False, "displayName": "State"}]}},
-        ],
-        "fieldConfig": {
-            "defaults": {
-                "custom": {
-                    "displayMode": "auto",
-                    "filterable": True,
-                    "minWidth": 120,
-                },
-            },
-            "overrides": [
-                # State column: color-code by value
-                {
-                    "matcher": {"id": "byName", "options": "State"},
-                    "properties": [
-                        {
-                            "id": "custom.displayMode",
-                            "value": "color-background",
-                        },
-                        {
-                            "id": "thresholds",
-                            "value": {
-                                "mode": "absolute",
-                                "steps": [
-                                    {"color": "green",  "value": None},  # default
-                                ],
-                            },
-                        },
-                        {
-                            "id": "mappings",
-                            "value": [
-                                {"type": "value", "options": {"down":        {"color": "#F2495C", "index": 0}}},
-                                {"type": "value", "options": {"down+drain":  {"color": "#F2495C", "index": 1}}},
-                                {"type": "value", "options": {"drained":     {"color": "#FF9830", "index": 2}}},
-                                {"type": "value", "options": {"draining":    {"color": "#FF9830", "index": 3}}},
-                                {"type": "value", "options": {"drain":       {"color": "#FF9830", "index": 4}}},
-                                {"type": "value", "options": {"idlecloud":   {"color": "#5794F2", "index": 5}}},
-                                {"type": "value", "options": {"idle":        {"color": "#73BF69", "index": 6}}},
-                                {"type": "value", "options": {"allocated":   {"color": "#73BF69", "index": 7}}},
-                                {"type": "value", "options": {"mixed":       {"color": "#73BF69", "index": 8}}},
-                            ],
-                        },
-                    ],
-                },
-                # Node column: wider
-                {
-                    "matcher": {"id": "byName", "options": "Node (Slurm hostname)"},
-                    "properties": [{"id": "custom.width", "value": 220}],
-                },
-                # Reason column: wrap text, fill remaining width
-                {
-                    "matcher": {"id": "byName", "options": "Reason"},
-                    "properties": [
-                        {"id": "custom.width",    "value": 500},
-                        {"id": "custom.displayMode", "value": "auto"},
-                    ],
-                },
-            ],
-        },
-        "options": {
-            "sortBy": [{"desc": False, "displayName": "State"}],
-            "footer": {"show": False},
-            "showHeader": True,
-        },
-    },
+       unit="short", x=12, y=8, w=12, h=7),
 ]
 
-# ── 2. Job Queue ──────────────────────────────────────────────────────────────
+# ── 2. Slurm / Job ────────────────────────────────────────────────────────────
 d2_panels = [
-    stat(1, "Nodes Idle",      'slurm_node_count_per_state{state="idle"}',      "none", x=0,  y=0, w=4, h=3),
-    stat(2, "Nodes Allocated", 'slurm_node_count_per_state{state="allocated"}', "none", x=4,  y=0, w=4, h=3),
-    stat(3, "Nodes Down",      'slurm_node_count_per_state{state="down"}',      "none", x=8,  y=0, w=4, h=3,
-         thresholds={"mode":"absolute","steps":[{"color":"green","value":None},{"color":"red","value":1}]}),
-    stat(4, "CPU Idle Cores",       'slurm_cpus_idle',                               "none", x=12, y=0, w=4, h=3),
-    stat(5, "CPUs Allocated",  'slurm_cpus_per_state{state="allocated"}',       "none", x=16, y=0, w=4, h=3),
-    stat(6, "Cluster Load",    'slurm_cpu_load',                                "short",x=20, y=0, w=4, h=3),
-    ts(7, "Node Count by State",
+    # ── Row 1: Slurm node/cpu stats ──
+    {
+        "id": 50, "title": "🟢 Healthy Nodes",
+        "type": "stat",
+        "gridPos": {"h": 3, "w": 4, "x": 0, "y": 0},
+        "targets": [{"expr": 'sum(slurm_node_count_per_state{state=~"idle.*|allocated.*|mixed.*|completing.*|planned.*"}) or vector(0)', "legendFormat": " ", "refId": "A", "instant": True}],
+        "fieldConfig": {"defaults": {"unit": "none", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": None}]}, "noValue": "0"}, "overrides": []},
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "textMode": "auto", "justifyMode": "center"},
+    },
+    {
+        "id": 51, "title": "🔴 Problem Nodes",
+        "type": "stat",
+        "gridPos": {"h": 3, "w": 4, "x": 4, "y": 0},
+        "targets": [{"expr": 'sum(slurm_node_count_per_state{state=~"down.*|fail.*|not_responding.*|drained.*|draining.*|maint.*|inval.*"}) or vector(0)', "legendFormat": " ", "refId": "A", "instant": True}],
+        "fieldConfig": {"defaults": {"unit": "none", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": None}, {"color": "red", "value": 1}]}, "noValue": "0"}, "overrides": []},
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "textMode": "auto", "justifyMode": "center"},
+    },
+    stat(1, "Nodes Idle",      'sum(slurm_node_count_per_state{state=~"idle.*"}) or vector(0)',      "none", x=8,  y=0, w=3, h=3),
+    stat(2, "Nodes Allocated", 'sum(slurm_node_count_per_state{state=~"allocated.*"}) or vector(0)', "none", x=11, y=0, w=3, h=3),
+    stat(3, "CPU Idle Cores",  'slurm_cpus_idle or vector(0)',                                       "none", x=14, y=0, w=4, h=3),
+    stat(4, "CPUs Allocated",  'sum(slurm_cpus_per_state{state=~"allocated.*"}) or vector(0)',       "none", x=18, y=0, w=3, h=3),
+    stat(5, "Cluster Load",    'slurm_cpu_load',                                                     "short",x=21, y=0, w=3, h=3),
+    ts(6, "Node Count by State",
        [t('slurm_node_count_per_state', "{{state}}")],
        unit="none", x=0, y=3, w=12, h=8),
-    ts(8, "CPU Allocation",
+    ts(7, "CPU Allocation",
        [t('slurm_cpus_per_state', "{{state}}")],
        unit="none", x=12, y=3, w=12, h=8),
-    ts(9, "Memory Allocated vs Free (GB)",
+    ts(8, "Memory Allocated vs Free (GB)",
        [t('slurm_mem_alloc / 1e9', "allocated"),
         t('slurm_mem_free / 1e9', "free")],
        unit="short", x=0, y=11, w=24, h=7),
@@ -442,6 +346,117 @@ d7_panels = [
        unit="short", x=0, y=16, w=24, h=8),
 ]
 
+# ── 8. Node Status ───────────────────────────────────────────────────────────
+d8_panels = [
+    # ── Row 1: Summary stats ──
+    {
+        "id": 50, "title": "🟢 Healthy Nodes",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [{"expr": 'sum(slurm_node_count_per_state{state=~"idle.*|allocated.*|mixed.*|completing.*|planned.*"}) or vector(0)', "legendFormat": " ", "refId": "A", "instant": True}],
+        "fieldConfig": {"defaults": {"unit": "none", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": None}]}, "noValue": "0"}, "overrides": []},
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "textMode": "auto", "justifyMode": "center"},
+    },
+    {
+        "id": 51, "title": "🔴 Problem Nodes",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [{"expr": 'sum(slurm_node_count_per_state{state=~"down.*|fail.*|not_responding.*|drained.*|draining.*|maint.*|inval.*"}) or vector(0)', "legendFormat": " ", "refId": "A", "instant": True}],
+        "fieldConfig": {"defaults": {"unit": "none", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": None}, {"color": "red", "value": 1}]}, "noValue": "0"}, "overrides": []},
+        "options": {"reduceOptions": {"calcs": ["lastNotNull"]}, "colorMode": "background", "textMode": "auto", "justifyMode": "center"},
+    },
+    stat(52, "Total Nodes",  'sum(slurm_node_count_per_state)', "none",  x=12, y=0, w=4, h=4),
+    stat(53, "Down",         'sum(slurm_node_count_per_state{state=~"down.*"}) or vector(0)', "none", x=16, y=0, w=2, h=4,
+         thresholds={"mode":"absolute","steps":[{"color":"green","value":None},{"color":"red","value":1}]}),
+    stat(54, "Drained",      'sum(slurm_node_count_per_state{state=~"drained.*"}) or vector(0)', "none", x=18, y=0, w=2, h=4,
+         thresholds={"mode":"absolute","steps":[{"color":"green","value":None},{"color":"orange","value":1}]}),
+    stat(55, "Not Responding",'sum(slurm_node_count_per_state{state=~"not_responding.*"}) or vector(0)', "none", x=20, y=0, w=2, h=4,
+         thresholds={"mode":"absolute","steps":[{"color":"green","value":None},{"color":"red","value":1}]}),
+    stat(56, "Draining",     'sum(slurm_node_count_per_state{state=~"draining.*"}) or vector(0)', "none", x=22, y=0, w=2, h=4,
+         thresholds={"mode":"absolute","steps":[{"color":"green","value":None},{"color":"yellow","value":1}]}),
+
+    # ── Row 2: Node State Over Time stacked area (full width, tall) ──
+    {
+        "id": 60, "title": "Node State Over Time",
+        "type": "timeseries",
+        "gridPos": {"h": 10, "w": 24, "x": 0, "y": 4},
+        "targets": [
+            {"expr": 'slurm_node_count_per_state{state=~"idle.*|allocated.*|mixed.*|completing.*|planned.*"}', "legendFormat": "{{state}}", "refId": "A"},
+            {"expr": 'slurm_node_count_per_state{state=~"down.*|fail.*|not_responding.*|drained.*|draining.*|maint.*"}', "legendFormat": "{{state}}", "refId": "B"},
+            {"expr": 'slurm_node_count_per_state{state=~"powering_up.*|powering_down.*|powered_down.*|reboot.*"}', "legendFormat": "{{state}}", "refId": "C"},
+        ],
+        "fieldConfig": {
+            "defaults": {"unit": "none", "custom": {"lineWidth": 1, "fillOpacity": 20, "stacking": {"mode": "normal"}}},
+            "overrides": [
+                {"matcher": {"id": "byName", "options": "idle"},    "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "#73BF69"}}]},
+                {"matcher": {"id": "byName", "options": "allocated"},"properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "#5794F2"}}]},
+                {"matcher": {"id": "byName", "options": "down"},    "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "#F2495C"}}]},
+                {"matcher": {"id": "byName", "options": "drained"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "#FF9830"}}]},
+                {"matcher": {"id": "byName", "options": "draining"},"properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "#FF780A"}}]},
+                {"matcher": {"id": "byName", "options": "not_responding"}, "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "#E02F44"}}]},
+            ],
+        },
+        "options": {"tooltip": {"mode": "multi"}, "legend": {"displayMode": "table", "placement": "right"}},
+    },
+
+    # ── Row 3: Node Status History table (full width, very tall) ──
+    {
+        "id": 11,
+        "title": "Node Status History",
+        "type": "table",
+        "gridPos": {"h": 20, "w": 24, "x": 0, "y": 14},
+        "targets": [
+            {
+                "expr": 'last_over_time(slurm_node_state_reason[2m]) == 1',
+                "instant": False,
+                "refId": "A",
+                "legendFormat": "{{node}}",
+            }
+        ],
+        "transformations": [
+            {"id": "labelsToFields", "options": {"mode": "columns"}},
+            {
+                "id": "organize",
+                "options": {
+                    "excludeByName": {
+                        "Time": True, "Value": True, "__name__": True,
+                        "instance": True, "job": True, "node_type": True,
+                        "node_name": True,
+                    },
+                    "renameByName": {"node": "Node", "state": "State", "reason": "Reason"},
+                    "indexByName": {"node": 0, "state": 1, "reason": 2},
+                }
+            },
+            {"id": "sortBy", "options": {"fields": [{"desc": True, "displayName": "State"}]}},
+        ],
+        "fieldConfig": {
+            "defaults": {"custom": {"displayMode": "auto", "filterable": True, "minWidth": 150}},
+            "overrides": [
+                {
+                    "matcher": {"id": "byName", "options": "State"},
+                    "properties": [
+                        {"id": "custom.displayMode", "value": "color-background"},
+                        {"id": "custom.width", "value": 160},
+                        {"id": "mappings", "value": [
+                            {"type": "value", "options": {"down":         {"color": "#F2495C", "index": 0}}},
+                            {"type": "value", "options": {"not_responding":{"color": "#E02F44", "index": 1}}},
+                            {"type": "value", "options": {"fail":         {"color": "#F2495C", "index": 2}}},
+                            {"type": "value", "options": {"drained":      {"color": "#FF9830", "index": 3}}},
+                            {"type": "value", "options": {"draining":     {"color": "#FF780A", "index": 4}}},
+                            {"type": "value", "options": {"maint":        {"color": "#FADE2A", "index": 5}}},
+                            {"type": "value", "options": {"allocated":    {"color": "#5794F2", "index": 6}}},
+                            {"type": "value", "options": {"idle":         {"color": "#73BF69", "index": 7}}},
+                        ]},
+                    ],
+                },
+                {"matcher": {"id": "byName", "options": "Node"},   "properties": [{"id": "custom.width", "value": 260}]},
+                {"matcher": {"id": "byName", "options": "Reason"}, "properties": [{"id": "custom.displayMode", "value": "auto"}]},
+            ],
+        },
+        "options": {"sortBy": [{"desc": True, "displayName": "State"}], "footer": {"show": False}, "showHeader": True},
+    },
+]
+
 # ── Save all dashboards ────────────────────────────────────────────────────────
 dashboards = [
     ("00-overview.json",
@@ -449,7 +464,7 @@ dashboards = [
     ("01-cluster-overview.json",
      dash("p6-cluster-overview", "1. Cluster Overview", d1_panels)),
     ("02-job-queue.json",
-     dash("p6-job-queue", "2. Job Queue", d2_panels)),
+     dash("p6-job-queue", "2. Slurm / Job", d2_panels)),
     ("03-job-overview.json",
      dash("p6-job-overview", "3. Job Overview", d3_panels)),
     ("04-gpu-peer-comparison.json",
@@ -460,6 +475,8 @@ dashboards = [
      dash("p6-host-system", "6. Host System — CPU / Memory / PSI", d6_panels)),
     ("07-z-score-outlier.json",
      dash("p6-zscore", "7. Peer Outlier Detection — Z-Score", d7_panels)),
+    ("08-node-status.json",
+     dash("p6-node-status", "8. Node Status", d8_panels)),
 ]
 
 for fname, d in dashboards:

@@ -1,6 +1,6 @@
 {
   "uid": "p6-job-queue",
-  "title": "2. Job Queue",
+  "title": "2. Slurm / Job",
   "schemaVersion": 39,
   "version": 1,
   "refresh": "30s",
@@ -15,8 +15,8 @@
   ],
   "panels": [
     {
-      "id": 1,
-      "title": "Nodes Idle",
+      "id": 50,
+      "title": "\ud83d\udfe2 Healthy Nodes",
       "type": "stat",
       "gridPos": {
         "h": 3,
@@ -26,7 +26,101 @@
       },
       "targets": [
         {
-          "expr": "slurm_node_count_per_state{state=\"idle\"}",
+          "expr": "sum(slurm_node_count_per_state{state=~\"idle.*|allocated.*|mixed.*|completing.*|planned.*\"}) or vector(0)",
+          "legendFormat": " ",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "textMode": "auto",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 51,
+      "title": "\ud83d\udd34 Problem Nodes",
+      "type": "stat",
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "sum(slurm_node_count_per_state{state=~\"down.*|fail.*|not_responding.*|drained.*|draining.*|maint.*|inval.*\"}) or vector(0)",
+          "legendFormat": " ",
+          "refId": "A",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "background",
+        "textMode": "auto",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 1,
+      "title": "Nodes Idle",
+      "type": "stat",
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 8,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "sum(slurm_node_count_per_state{state=~\"idle.*\"}) or vector(0)",
           "legendFormat": " ",
           "refId": "A"
         }
@@ -62,13 +156,13 @@
       "type": "stat",
       "gridPos": {
         "h": 3,
-        "w": 4,
-        "x": 4,
+        "w": 3,
+        "x": 11,
         "y": 0
       },
       "targets": [
         {
-          "expr": "slurm_node_count_per_state{state=\"allocated\"}",
+          "expr": "sum(slurm_node_count_per_state{state=~\"allocated.*\"}) or vector(0)",
           "legendFormat": " ",
           "refId": "A"
         }
@@ -100,17 +194,17 @@
     },
     {
       "id": 3,
-      "title": "Nodes Down",
+      "title": "CPU Idle Cores",
       "type": "stat",
       "gridPos": {
         "h": 3,
         "w": 4,
-        "x": 8,
+        "x": 14,
         "y": 0
       },
       "targets": [
         {
-          "expr": "slurm_node_count_per_state{state=\"down\"}",
+          "expr": "slurm_cpus_idle or vector(0)",
           "legendFormat": " ",
           "refId": "A"
         }
@@ -124,10 +218,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
               }
             ]
           }
@@ -146,17 +236,17 @@
     },
     {
       "id": 4,
-      "title": "CPU Idle Cores",
+      "title": "CPUs Allocated",
       "type": "stat",
       "gridPos": {
         "h": 3,
-        "w": 4,
-        "x": 12,
+        "w": 3,
+        "x": 18,
         "y": 0
       },
       "targets": [
         {
-          "expr": "slurm_cpus_idle",
+          "expr": "sum(slurm_cpus_per_state{state=~\"allocated.*\"}) or vector(0)",
           "legendFormat": " ",
           "refId": "A"
         }
@@ -188,54 +278,12 @@
     },
     {
       "id": 5,
-      "title": "CPUs Allocated",
-      "type": "stat",
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 16,
-        "y": 0
-      },
-      "targets": [
-        {
-          "expr": "slurm_cpus_per_state{state=\"allocated\"}",
-          "legendFormat": " ",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto"
-      }
-    },
-    {
-      "id": 6,
       "title": "Cluster Load",
       "type": "stat",
       "gridPos": {
         "h": 3,
-        "w": 4,
-        "x": 20,
+        "w": 3,
+        "x": 21,
         "y": 0
       },
       "targets": [
@@ -271,7 +319,7 @@
       }
     },
     {
-      "id": 7,
+      "id": 6,
       "title": "Node Count by State",
       "type": "timeseries",
       "gridPos": {
@@ -308,7 +356,7 @@
       }
     },
     {
-      "id": 8,
+      "id": 7,
       "title": "CPU Allocation",
       "type": "timeseries",
       "gridPos": {
@@ -345,7 +393,7 @@
       }
     },
     {
-      "id": 9,
+      "id": 8,
       "title": "Memory Allocated vs Free (GB)",
       "type": "timeseries",
       "gridPos": {
@@ -407,7 +455,7 @@
       "targetBlank": false
     },
     {
-      "title": "Job Queue",
+      "title": "Slurm / Job",
       "url": "/d/p6-job-queue",
       "type": "link",
       "targetBlank": false
@@ -433,6 +481,12 @@
     {
       "title": "Z-Score",
       "url": "/d/p6-zscore",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Node Status",
+      "url": "/d/p6-node-status",
       "type": "link",
       "targetBlank": false
     }

@@ -78,6 +78,135 @@ EOF
   echo "node_exporter started on :9100"
 fi
 
+# ---- Docker + nvidia-container-toolkit (for NeMo/mbridge on HeadNode) ----
+if ! command -v docker &>/dev/null; then
+  echo "Installing Docker + nvidia-container-toolkit on HeadNode..."
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get install -y ca-certificates curl gnupg
+  install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --batch --no-tty --dearmor -o /etc/apt/keyrings/docker.gpg
+  chmod a+r /etc/apt/keyrings/docker.gpg
+  ARCH=$(dpkg --print-architecture)
+  CODENAME=$(lsb_release -cs 2>/dev/null || echo jammy)
+  echo "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu ${CODENAME} stable" \
+    > /etc/apt/sources.list.d/docker.list
+  curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+    | gpg --batch --no-tty --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+  curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+    | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+    > /etc/apt/sources.list.d/nvidia-container-toolkit.list
+  apt-get update -qq
+  apt-get install -y docker-ce docker-ce-cli containerd.io nvidia-container-toolkit
+  nvidia-ctk runtime configure --runtime=docker
+  systemctl enable --now docker
+  echo "Docker installed on HeadNode"
+fi
+
+
+# ---- ubuntu cross-node SSH (required for mpirun across nodes) ----
+# mpirun uses ubuntu user SSH — root SSH is blocked by pcluster
+# Strategy: generate key on headnode, publish pub key to FSx
+#           compute nodes (OnNodeConfigured) pick it up via /fsx/cluster/ubuntu-headnode.pub
+if [ ! -f /home/ubuntu/.ssh/id_ed25519 ]; then
+  echo "Setting up ubuntu user SSH key for cross-node MPI..."
+  mkdir -p /home/ubuntu/.ssh
+  ssh-keygen -t ed25519 -N "" -f /home/ubuntu/.ssh/id_ed25519 -q
+  cat /home/ubuntu/.ssh/id_ed25519.pub >> /home/ubuntu/.ssh/authorized_keys
+  chmod 700 /home/ubuntu/.ssh
+  chmod 600 /home/ubuntu/.ssh/authorized_keys /home/ubuntu/.ssh/id_ed25519
+  chown -R ubuntu:ubuntu /home/ubuntu/.ssh
+  su - ubuntu -c "ssh-keyscan -H localhost >> ~/.ssh/known_hosts 2>/dev/null" || true
+  echo "ubuntu SSH key created"
+fi
+# Publish pub key to FSx so compute nodes can pick it up in OnNodeConfigured
+if mountpoint -q /fsx 2>/dev/null; then
+  mkdir -p /fsx/cluster
+  cp /home/ubuntu/.ssh/id_ed25519.pub /fsx/cluster/ubuntu-headnode.pub
+  # Pre-scan compute node hostnames into known_hosts (avoids interactive prompt during mpirun)
+  for h in $(seq 1 8); do
+    su - ubuntu -c "ssh-keyscan -H p6b200-st-p6b200-nodes-${h} >> ~/.ssh/known_hosts 2>/dev/null" || true
+  done
+  echo "ubuntu pub key published to /fsx/cluster/ubuntu-headnode.pub"
+fi
+
+# ---- enroot + Pyxis: container runtime for srun --container-image ----
+# Required for NCCL tests and NeMo benchmarks via Slurm
+# enroot: unprivileged container runtime (NVIDIA)
+# Pyxis: Slurm SPANK plugin that adds --container-image/--container-mounts to srun
+ENROOT_VERSION="3.4.1"
+PYXIS_VERSION="0.20.0"
+SLURM_VERSION=$(sinfo --version 2>/dev/null | awk '{print $2}' || echo "")
+
+if ! command -v enroot &>/dev/null; then
+  echo "Installing enroot ${ENROOT_VERSION}..."
+  # Install dependencies
+  apt-get install -y curl gawk squashfs-tools parallel libcap2-bin 2>/dev/null || true
+
+  ARCH=$(dpkg --print-architecture)
+  ENROOT_DEB="enroot_${ENROOT_VERSION}+1_${ARCH}.deb"
+  ENROOT_DEB_CAPS="enroot+caps_${ENROOT_VERSION}+1_${ARCH}.deb"
+
+  curl -fsSL "https://github.com/NVIDIA/enroot/releases/download/v${ENROOT_VERSION}/${ENROOT_DEB}" \
+    -o "/tmp/${ENROOT_DEB}" 2>/dev/null
+  curl -fsSL "https://github.com/NVIDIA/enroot/releases/download/v${ENROOT_VERSION}/${ENROOT_DEB_CAPS}" \
+    -o "/tmp/${ENROOT_DEB_CAPS}" 2>/dev/null
+  apt-get install -y "/tmp/${ENROOT_DEB}" "/tmp/${ENROOT_DEB_CAPS}" 2>&1 | tail -3 || true
+  rm -f "/tmp/${ENROOT_DEB}" "/tmp/${ENROOT_DEB_CAPS}"
+
+  # enroot config: use /fsx for scratch (large image imports)
+  mkdir -p /etc/enroot
+  cat > /etc/enroot/enroot.conf << 'ENROOTEOF'
+ENROOT_RUNTIME_PATH    /run/enroot/user-$(id -u)
+ENROOT_CACHE_PATH      /fsx/enroot/cache
+ENROOT_DATA_PATH       /fsx/enroot/data
+ENROOT_TEMP_PATH       /tmp
+ENROOT_SQUASH_OPTIONS  -noI -noD -noF -noX -no-progress
+ENROOT_MOUNT_HOME      y
+ENROOT_RESTRICT_DEV    y
+ENROOT_ROOTFS_WRITABLE y
+ENROOTEOF
+
+  mkdir -p /fsx/enroot/cache /fsx/enroot/data
+  echo "enroot installed: $(enroot version 2>/dev/null || echo 'check version manually')"
+else
+  echo "enroot already installed: $(enroot version 2>/dev/null)"
+fi
+
+if ! ls /usr/local/lib/slurm/spank_pyxis.so &>/dev/null; then
+  echo "Installing Pyxis ${PYXIS_VERSION}..."
+  apt-get install -y build-essential libslurm-dev 2>/dev/null || true
+
+  # Find Slurm include path
+  SLURM_INCLUDE=$(find /opt/slurm /usr -name "slurm.h" 2>/dev/null | head -1 | xargs dirname 2>/dev/null || echo /usr/include/slurm)
+
+  cd /tmp
+  rm -rf pyxis-src
+  git clone --depth=1 --branch "v${PYXIS_VERSION}" \
+    https://github.com/NVIDIA/pyxis.git pyxis-src 2>&1 | tail -3
+  cd pyxis-src
+
+  # Build against pcluster Slurm
+  SLURM_PREFIX=$(dirname "$(dirname "$(command -v sinfo 2>/dev/null || echo /opt/slurm/bin/sinfo)")")
+  make SLURM_PREFIX="${SLURM_PREFIX}" 2>&1 | tail -5
+  make install SLURM_PREFIX="${SLURM_PREFIX}" 2>&1 | tail -3
+  cd / && rm -rf /tmp/pyxis-src
+
+  # Register Pyxis SPANK plugin
+  PLUGSTACK_CONF="${SLURM_PREFIX}/etc/plugstack.conf"
+  if ! grep -q pyxis "${PLUGSTACK_CONF}" 2>/dev/null; then
+    echo "include /etc/slurm/plugstack.conf.d/*.conf" >> "${PLUGSTACK_CONF}" 2>/dev/null || true
+    mkdir -p /etc/slurm/plugstack.conf.d
+    echo "required ${SLURM_PREFIX}/lib/slurm/spank_pyxis.so" \
+      > /etc/slurm/plugstack.conf.d/pyxis.conf
+  fi
+
+  # Restart slurmctld to load Pyxis
+  systemctl restart slurmctld 2>/dev/null || true
+  echo "Pyxis installed: spank_pyxis.so"
+else
+  echo "Pyxis already installed"
+fi
+
 # ---- slurm_exporter: install post-boot via systemd oneshot ----
 # go build takes ~10 min — runs AFTER cfn-signal so it doesn't block cluster creation
 GO_VERSION="1.23.1"
@@ -222,28 +351,26 @@ CRONEOF
 # Metric: slurm_node_state_reason{node, state, reason} 1
 cat > /usr/local/bin/slurm-node-reason-collector.sh << 'REASONEOF'
 #!/bin/bash
-OUTFILE="/var/lib/node_exporter/textfile/slurm_node_reason.prom"
+OUTFILE="/var/lib/node_exporter/textfile/slurm_node_reasons.prom"
 TMPFILE="${OUTFILE}.tmp"
 > "${TMPFILE}"
-
-scontrol show node -o 2>/dev/null | while read -r line; do
-  NODE=$(echo "$line" | grep -oP 'NodeName=\K\S+')
-  STATE=$(echo "$line" | grep -oP 'State=\K\S+')
-  REASON=$(echo "$line" | grep -oP 'Reason=\K[^@\n]+' | sed 's/[[:space:]]*$//' | tr -d '"\\')
-  [ -z "$NODE" ] && continue
-  STATE_CLEAN=$(echo "$STATE" | tr '[:upper:]' '[:lower:]' | tr -d '*+~#$')
-  REASON_CLEAN=$(echo "$REASON" | sed 's/[^a-zA-Z0-9 ._:-]//g' | cut -c1-128)
-  echo "slurm_node_state_reason{node=\"${NODE}\",state=\"${STATE_CLEAN}\",reason=\"${REASON_CLEAN}\"} 1" >> "${TMPFILE}"
-done
-
+export PATH=/opt/slurm/bin:$PATH
+while IFS= read -r line; do
+  node=$(echo "$line" | awk '{print $1}')
+  state=$(echo "$line" | awk '{print $2}')
+  reason=$(echo "$line" | cut -d' ' -f3-)
+  [ -z "$node" ] && continue
+  reason="${reason:-none}"
+  printf 'slurm_node_state_reason{node="%s",state="%s",reason="%s"} 1\n' \
+    "$node" "$state" "$reason" >> "${TMPFILE}"
+done < <(sinfo -h -o '%N %T %E' -N 2>/dev/null)
 mv "${TMPFILE}" "${OUTFILE}" 2>/dev/null || true
 REASONEOF
 chmod +x /usr/local/bin/slurm-node-reason-collector.sh
 
-# Run every 30 seconds via two cron entries (cron minimum is 1min)
+# Run every minute via cron
 cat >> /etc/cron.d/tag-compute-nodes << 'CRONEOF'
 * * * * * root /usr/local/bin/slurm-node-reason-collector.sh
-* * * * * root sleep 30; /usr/local/bin/slurm-node-reason-collector.sh
 CRONEOF
 
 # Seed initial run (slurm may not be ready yet — ignore errors)

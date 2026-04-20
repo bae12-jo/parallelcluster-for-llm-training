@@ -220,7 +220,7 @@
       "targetBlank": false
     },
     {
-      "title": "Job Queue",
+      "title": "Slurm / Job",
       "url": "/d/p6-job-queue",
       "type": "link",
       "targetBlank": false
@@ -246,6 +246,12 @@
     {
       "title": "Z-Score",
       "url": "/d/p6-zscore",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Node Status",
+      "url": "/d/p6-node-status",
       "type": "link",
       "targetBlank": false
     }

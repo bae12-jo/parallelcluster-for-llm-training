@@ -15,18 +15,19 @@
   ],
   "panels": [
     {
-      "id": 1,
-      "title": "Allocated",
+      "id": 50,
+      "title": "\ud83d\udfe2 Healthy Nodes",
+      "description": "idle + allocated + mixed + completing + planned",
       "type": "stat",
       "gridPos": {
         "h": 4,
-        "w": 4,
+        "w": 6,
         "x": 0,
         "y": 0
       },
       "targets": [
         {
-          "expr": "slurm_node_count_per_state{state=\"allocated\"}",
+          "expr": "sum(slurm_node_count_per_state{state=~\"idle.*|allocated.*|mixed.*|completing.*|planned.*\"}) or vector(0)",
           "legendFormat": " ",
           "refId": "A",
           "instant": true
@@ -56,23 +57,23 @@
         },
         "colorMode": "background",
         "textMode": "auto",
-        "orientation": "auto",
         "justifyMode": "center"
       }
     },
     {
-      "id": 2,
-      "title": "Idle",
+      "id": 51,
+      "title": "\ud83d\udd34 Problem Nodes",
+      "description": "down + fail + not_responding + drained + draining + maint + inval",
       "type": "stat",
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 4,
+        "w": 6,
+        "x": 6,
         "y": 0
       },
       "targets": [
         {
-          "expr": "slurm_node_count_per_state{state=\"idle\"}",
+          "expr": "sum(slurm_node_count_per_state{state=~\"down.*|fail.*|not_responding.*|drained.*|draining.*|maint.*|inval.*\"}) or vector(0)",
           "legendFormat": " ",
           "refId": "A",
           "instant": true
@@ -87,6 +88,10 @@
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
               }
             ]
           },
@@ -102,59 +107,12 @@
         },
         "colorMode": "background",
         "textMode": "auto",
-        "orientation": "auto",
         "justifyMode": "center"
       }
     },
     {
-      "id": 3,
-      "title": "Mixed",
-      "type": "stat",
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 8,
-        "y": 0
-      },
-      "targets": [
-        {
-          "expr": "slurm_node_count_per_state{state=\"mixed\"}",
-          "legendFormat": " ",
-          "refId": "A",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "noValue": "0"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto",
-        "orientation": "auto",
-        "justifyMode": "center"
-      }
-    },
-    {
-      "id": 4,
-      "title": "Completing",
+      "id": 52,
+      "title": "Total Nodes",
       "type": "stat",
       "gridPos": {
         "h": 4,
@@ -164,10 +122,9 @@
       },
       "targets": [
         {
-          "expr": "slurm_node_count_per_state{state=\"completing\"}",
+          "expr": "sum(slurm_node_count_per_state)",
           "legendFormat": " ",
-          "refId": "A",
-          "instant": true
+          "refId": "A"
         }
       ],
       "fieldConfig": {
@@ -181,8 +138,7 @@
                 "value": null
               }
             ]
-          },
-          "noValue": "0"
+          }
         },
         "overrides": []
       },
@@ -193,13 +149,11 @@
           ]
         },
         "colorMode": "background",
-        "textMode": "auto",
-        "orientation": "auto",
-        "justifyMode": "center"
+        "textMode": "auto"
       }
     },
     {
-      "id": 5,
+      "id": 53,
       "title": "CPU Idle Cores",
       "type": "stat",
       "gridPos": {
@@ -241,7 +195,7 @@
       }
     },
     {
-      "id": 6,
+      "id": 54,
       "title": "Cluster Load",
       "type": "stat",
       "gridPos": {
@@ -283,578 +237,6 @@
       }
     },
     {
-      "id": 9,
-      "title": "Down",
-      "type": "stat",
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 0,
-        "y": 4
-      },
-      "targets": [
-        {
-          "expr": "slurm_node_count_per_state{state=\"down\"}",
-          "legendFormat": " ",
-          "refId": "A",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "transparent",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          },
-          "noValue": "0"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto",
-        "orientation": "auto",
-        "justifyMode": "center"
-      }
-    },
-    {
-      "id": 10,
-      "title": "Fail / Failing",
-      "type": "stat",
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 4,
-        "y": 4
-      },
-      "targets": [
-        {
-          "expr": "slurm_node_count_per_state{state=\"fail\"}",
-          "legendFormat": " ",
-          "refId": "A",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "transparent",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          },
-          "noValue": "0"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto",
-        "orientation": "auto",
-        "justifyMode": "center"
-      }
-    },
-    {
-      "id": 11,
-      "title": "Not Responding",
-      "type": "stat",
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 8,
-        "y": 4
-      },
-      "targets": [
-        {
-          "expr": "slurm_node_count_per_state{state=\"not_responding\"}",
-          "legendFormat": " ",
-          "refId": "A",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "transparent",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          },
-          "noValue": "0"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto",
-        "orientation": "auto",
-        "justifyMode": "center"
-      }
-    },
-    {
-      "id": 12,
-      "title": "Drained",
-      "type": "stat",
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 12,
-        "y": 4
-      },
-      "targets": [
-        {
-          "expr": "slurm_node_count_per_state{state=\"drained\"}",
-          "legendFormat": " ",
-          "refId": "A",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "transparent",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 1
-              }
-            ]
-          },
-          "noValue": "0"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto",
-        "orientation": "auto",
-        "justifyMode": "center"
-      }
-    },
-    {
-      "id": 13,
-      "title": "Draining",
-      "type": "stat",
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 16,
-        "y": 4
-      },
-      "targets": [
-        {
-          "expr": "slurm_node_count_per_state{state=\"draining\"}",
-          "legendFormat": " ",
-          "refId": "A",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "transparent",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 1
-              }
-            ]
-          },
-          "noValue": "0"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto",
-        "orientation": "auto",
-        "justifyMode": "center"
-      }
-    },
-    {
-      "id": 14,
-      "title": "Total Nodes",
-      "type": "stat",
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 20,
-        "y": 4
-      },
-      "targets": [
-        {
-          "expr": "sum(slurm_node_count_per_state)",
-          "legendFormat": " ",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto"
-      }
-    },
-    {
-      "id": 40,
-      "title": "Maint",
-      "type": "stat",
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 0,
-        "y": 8
-      },
-      "targets": [
-        {
-          "expr": "slurm_node_count_per_state{state=\"maint\"}",
-          "legendFormat": " ",
-          "refId": "A",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "transparent",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 1
-              }
-            ]
-          },
-          "noValue": "0"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto",
-        "orientation": "auto",
-        "justifyMode": "center"
-      }
-    },
-    {
-      "id": 41,
-      "title": "Powering Up",
-      "type": "stat",
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 4,
-        "y": 8
-      },
-      "targets": [
-        {
-          "expr": "slurm_node_count_per_state{state=\"powering_up\"}",
-          "legendFormat": " ",
-          "refId": "A",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          },
-          "noValue": "0"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto",
-        "orientation": "auto",
-        "justifyMode": "center"
-      }
-    },
-    {
-      "id": 42,
-      "title": "Powered Down",
-      "type": "stat",
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 8,
-        "y": 8
-      },
-      "targets": [
-        {
-          "expr": "slurm_node_count_per_state{state=\"powered_down\"}",
-          "legendFormat": " ",
-          "refId": "A",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          },
-          "noValue": "0"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto",
-        "orientation": "auto",
-        "justifyMode": "center"
-      }
-    },
-    {
-      "id": 43,
-      "title": "Power Down",
-      "type": "stat",
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 12,
-        "y": 8
-      },
-      "targets": [
-        {
-          "expr": "slurm_node_count_per_state{state=\"power_down\"}",
-          "legendFormat": " ",
-          "refId": "A",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          },
-          "noValue": "0"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto",
-        "orientation": "auto",
-        "justifyMode": "center"
-      }
-    },
-    {
-      "id": 44,
-      "title": "Unknown",
-      "type": "stat",
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 16,
-        "y": 8
-      },
-      "targets": [
-        {
-          "expr": "slurm_node_count_per_state{state=\"unknown\"}",
-          "legendFormat": " ",
-          "refId": "A",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          },
-          "noValue": "0"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto",
-        "orientation": "auto",
-        "justifyMode": "center"
-      }
-    },
-    {
-      "id": 45,
-      "title": "Planned/Reserved",
-      "type": "stat",
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 20,
-        "y": 8
-      },
-      "targets": [
-        {
-          "expr": "slurm_node_count_per_state{state=\"planned\"}",
-          "legendFormat": " ",
-          "refId": "A",
-          "instant": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "noValue": "0"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "colorMode": "background",
-        "textMode": "auto",
-        "orientation": "auto",
-        "justifyMode": "center"
-      }
-    },
-    {
       "id": 30,
       "title": "Node State History",
       "type": "timeseries",
@@ -862,7 +244,7 @@
         "h": 8,
         "w": 14,
         "x": 0,
-        "y": 11
+        "y": 4
       },
       "targets": [
         {
@@ -903,7 +285,7 @@
         "h": 8,
         "w": 10,
         "x": 14,
-        "y": 11
+        "y": 4
       },
       "targets": [
         {
@@ -912,8 +294,8 @@
           "refId": "A"
         },
         {
-          "expr": "sum(slurm_node_count_per_state{state=~\"allocated|mixed|completing\"})",
-          "legendFormat": "Active nodes (alloc+mixed+completing)",
+          "expr": "sum(slurm_node_count_per_state{state=~\"allocated.*|mixed.*|completing.*\"})",
+          "legendFormat": "Active nodes",
           "refId": "B"
         }
       ],
@@ -945,7 +327,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 19
+        "y": 12
       },
       "targets": [
         {
@@ -982,7 +364,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 19
+        "y": 12
       },
       "targets": [
         {
@@ -1019,7 +401,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 19
+        "y": 12
       },
       "targets": [
         {
@@ -1056,7 +438,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 26
+        "y": 19
       },
       "targets": [
         {
@@ -1093,7 +475,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 26
+        "y": 19
       },
       "targets": [
         {
@@ -1130,7 +512,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 26
+        "y": 19
       },
       "targets": [
         {
@@ -1167,7 +549,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 33
+        "y": 26
       },
       "targets": [
         {
@@ -1204,7 +586,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 33
+        "y": 26
       },
       "targets": [
         {
@@ -1246,7 +628,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 33
+        "y": 26
       },
       "targets": [
         {
@@ -1301,7 +683,7 @@
       "targetBlank": false
     },
     {
-      "title": "Job Queue",
+      "title": "Slurm / Job",
       "url": "/d/p6-job-queue",
       "type": "link",
       "targetBlank": false
@@ -1327,6 +709,12 @@
     {
       "title": "Z-Score",
       "url": "/d/p6-zscore",
+      "type": "link",
+      "targetBlank": false
+    },
+    {
+      "title": "Node Status",
+      "url": "/d/p6-node-status",
       "type": "link",
       "targetBlank": false
     }
