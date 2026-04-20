@@ -25,3 +25,13 @@ NCCL performance testing workflow (4 phases) with both bare-metal and container 
 | `phase2-multinode.sbatch` | Multi-node NCCL AllReduce |
 | `phase3-workload*.sbatch` | Workload simulation |
 | `phase4-optimization*.sbatch` | Tuning and optimization |
+
+## AMI/
+
+Custom AMI build guides for p6-b200 (Blackwell) instances.
+
+| File | Purpose |
+|------|---------|
+| `setup-fabric-manager.sh.md` | NVIDIA Fabric Manager setup for NVSwitch nodes — verified on g6.xlarge (no NVSwitch) and p4d.24xlarge (NVSwitch). Required packages: `ib_umad`, `nvlsm`, `nvidia-fabricmanager`. |
+
+See `scripts/build-p6b200-ami.sh` for the automated AMI build process.

@@ -1,292 +1,272 @@
-# GPU Cluster Monitoring
+# AWS ParallelCluster for Distributed Training
 
-Self-hosted Prometheus + Grafana monitoring stack for AWS ParallelCluster GPU clusters. Provides 8 pre-built dashboards covering cluster state, GPU performance, EFA network, host system, and statistical outlier detection.
+Self-contained setup for distributed training clusters on AWS ParallelCluster, with automated GPU monitoring, EFA networking, and FSx Lustre storage.
 
-Works with all NVIDIA GPU generations supported by DCGM: A10G, H100, H200, B200, GB200, GB300.
-
-> **Integration note**: This directory is designed to be merged into [parallelcluster-for-llm-training](https://github.com/bae12-jo/parallelcluster-for-llm-training) as a `monitoring/` subdirectory. The CloudFormation template and cluster config can be used standalone or alongside that repo's infrastructure.
+---
 
 ## Architecture
 
-```
-ParallelCluster nodes                 Monitoring instance (public subnet)
-─────────────────────                 ───────────────────────────────────
-HeadNode                              t3.medium EC2
-  ├── node_exporter   :9100  ────────▶ Prometheus (Docker)  :9090
-  └── slurm_exporter  :8080  ────────▶ Grafana   (Docker)   :3000
-                                              │
-Compute nodes (x N)                    ALB (port 80)
-  ├── node_exporter   :9100  ────────▶       │
-  └── dcgm-exporter   :9400  ────────▶       ▼
-                                       http://<ALB_DNS>
-```
+![Architecture Diagram](img/architecture.png)
 
-Prometheus uses EC2 service discovery (`parallelcluster:cluster-name` / `parallelcluster:node-type` / `slurm:hostname` tags) to auto-detect nodes. No manual target configuration needed.
+- **LoginNode** — user SSH access and job submission (public subnet, IP-restricted)
+- **HeadNode** — Slurm scheduler, NFS /home server (private subnet)
+- **ComputeNodes** — GPU workloads, auto-scaling, EFA networking (private subnet)
+- **Monitoring** — self-hosted Prometheus + Grafana, or AWS Managed Prometheus + Grafana
 
-## Dashboards
-
-| # | Dashboard | Key metrics |
-|---|-----------|------------|
-| 0 | Unified Overview | All key metrics in one view |
-| 1 | Cluster Overview | Node states, GPU temp/clock, EFA errors |
-| 2 | Job Queue | Slurm node/CPU/memory allocation over time |
-| 3 | Job Overview | Per-job GPU util/memory/power drill-down |
-| 4 | GPU Peer Comparison | GPU util/temp/memory/faults per node |
-| 5 | EFA & NVLink | Inter-node bandwidth, retransmits, RDMA |
-| 6 | Host System | CPU, memory, PSI pressure, storage I/O |
-| 7 | Z-Score Outlier Detection | Statistical outliers across nodes |
+---
 
 ## Directory Structure
 
-```
-infrastructure/
-  gpu-cluster-infra.yaml   CloudFormation: VPC, FSx Lustre, SGs, monitoring EC2 + ALB
-  prometheus.yml           Prometheus config template (EC2 SD with node_name relabeling)
-
-cluster/
-  cluster-config.yaml                 ParallelCluster config template (fill in placeholders)
-
-scripts/
-  setup-headnode.sh        OnNodeConfigured: node_exporter + queues slurm_exporter build
-  setup-compute-node.sh    OnNodeConfigured: node_exporter (EFA) + DCGM exporter + hostname tag
-  install-slurm-exporter.sh  Standalone slurm_exporter build script (also embedded in setup-headnode.sh)
-  import-dashboards.sh     Imports all 8 Grafana dashboard JSONs via API
-  redeploy.sh              Full redeploy: tear down + rebuild everything
-
-dashboards/
-  generate-dashboards.py   Generates all 8 dashboard JSONs (edit here, then regenerate)
-  00-overview.json … 07-z-score-outlier.json
-```
-
-## Cluster Access
-
-HeadNode is in a **private subnet** — direct SSH is not possible. Use one of the three methods below.
-
-### Method 1 — Two-hop SSH (manual)
-
-```bash
-# Step 1: Local → LoginNode
-ssh -i /path/to/key.pem ec2-user@<LoginNode_ALB_DNS>
-
-# Step 2: LoginNode → HeadNode (same VPC)
-ssh 10.x.x.x   # HeadNode private IP from pcluster describe-cluster
-```
-
-### Method 2 — ProxyJump (one command from local)
-
-Add to `~/.ssh/config`:
+> Samples and configurations in this repository are based on p6-b200 instance types.
 
 ```
-Host p6-login
-  HostName <LoginNode_ALB_DNS>
-  User ec2-user
-  IdentityFile /path/to/key.pem
-
-Host p6-headnode
-  HostName <HeadNode_private_IP>
-  User ec2-user
-  IdentityFile /path/to/key.pem
-  ProxyJump p6-login
-```
-
-Then connect directly from local:
-
-```bash
-ssh p6-headnode
-```
-
-### Method 3 — pcluster ssh (requires HeadNode in public subnet)
-
-> **Note**: Only works if HeadNode is in a **public subnet** with a public IP.  
-> The default config in this repo places HeadNode in a private subnet, so this method is not available out of the box.
-
-```bash
-AWS_PROFILE=<profile> pcluster ssh \
-  --cluster-name <cluster-name> \
-  --region <region> \
-  -i /path/to/key.pem
+.
+├── parallelcluster-infrastructure.yaml  CloudFormation: VPC, FSx, SGs, monitoring (4 modes)
+├── cluster-config.yaml.template         Cluster config template (envsubst-based)
+├── cluster-sample.yaml                  Ready-to-use sample based on p6-b200
+├── environment-variables.sh             All configurable variables with defaults
+│
+├── scripts/
+│   ├── setup-headnode.sh                OnNodeConfigured: node_exporter + slurm_exporter
+│   ├── setup-compute-node-start.sh      OnNodeStart: ib_umad + nvlsm + fabricmanager (p6-b200)
+│   ├── setup-compute-node.sh            OnNodeConfigured: DCGM exporter + EFA metrics
+│   ├── install-slurm-exporter.sh        Standalone slurm_exporter build (Go, ~10 min)
+│   ├── import-dashboards.sh             Import Grafana dashboards via API
+│   ├── deploy-cluster-stack.sh          Full deploy: CFn stack + pcluster (env-var driven)
+│   ├── build-p6b200-ami.sh              Build custom AMI with p6-b200 prerequisites
+│   ├── check-compute-setup.sh           Validate compute node configuration
+│   ├── monitor-compute-node-setup.sh    Track compute node bootstrap progress
+│   └── upload-monitoring-scripts.sh     Sync scripts to S3
+│
+├── dashboards/
+│   ├── generate-dashboards.py           Regenerate all dashboard JSONs
+│   ├── 00-overview.json                 Unified overview
+│   ├── 01-cluster-overview.json         Node states, GPU temp/clock
+│   ├── 02-job-queue.json                Slurm allocation over time
+│   ├── 03-job-overview.json             Per-job GPU drill-down
+│   ├── 04-gpu-peer-comparison.json      GPU util/temp/memory per node
+│   ├── 05-efa-nvlink.json               Inter-node bandwidth, RDMA
+│   ├── 06-host-system.json              CPU, memory, PSI, storage I/O
+│   └── 07-z-score-outlier.json          Statistical outlier detection
+│
+├── infrastructure/
+│   ├── gpu-cluster-infra.yaml           CloudFormation: VPC, FSx, SGs, monitoring EC2 + ALB
+│   └── prometheus.yml                   Prometheus config (EC2 SD with node_name relabeling)
+│
+├── cluster/
+│   ├── cluster-config.yaml              ParallelCluster config template (g5/g6, on-demand)
+│   └── cluster-config-p6b200.yaml       ParallelCluster config for p6-b200 (Capacity Block)
+│
+├── guide/                               Detailed documentation (numbered)
+│   ├── 01-instance-type-configuration.md
+│   ├── 02-timeout-configuration.md
+│   ├── 06-amp-amg-setup.md
+│   ├── 08-prometheus-metrics.md
+│   └── ... (see guide/README.md)
+│
+├── config/
+│   ├── AMI/                             AMI build guides for p6-b200
+│   ├── headnode/                        HeadNode utilities: NCCL-to-FSx, NGC download, kernel update disable
+│   └── nccl/                            NCCL test sbatch scripts (phase1–4) + shared install scripts
+│
+├── reference/                           Reference templates and environment variable examples
+├── security-best-practices/             Security hardening and access guides
+└── img/                                 Architecture diagrams
 ```
 
 ---
 
 ## Prerequisites
 
-- AWS CLI configured (`aws configure` or SSO)
-- `pcluster` CLI v3.15+: `pip install aws-parallelcluster`
-- S3 bucket for scripts and dashboards
-- EC2 key pair
+- AWS CLI v2
+- ParallelCluster CLI v3.15+: `pip install aws-parallelcluster`
+- An S3 bucket for scripts and dashboards
+- An EC2 key pair
 
-## Deployment
+---
 
-### 1. Upload scripts and dashboards to S3
+## Quick Start
+
+### 1. Set environment variables
 
 ```bash
-S3_BUCKET=<YOUR_BUCKET>
-aws s3 mb s3://${S3_BUCKET} --region us-east-1   # skip if exists
+export S3_BUCKET=my-cluster-script-bucket
+export KEY_PAIR=my-ec2-keypair
+export GRAFANA_PASS=changeme
+export AWS_PROFILE=default
+export REGION=us-east-1
+```
 
-aws s3 sync scripts/    s3://${S3_BUCKET}/scripts/    --exclude "redeploy.sh"
+### 2. Upload scripts and dashboards to S3
+
+```bash
+aws s3 sync scripts/    s3://${S3_BUCKET}/scripts/    --exclude "deploy-cluster-stack.sh"
 aws s3 sync dashboards/ s3://${S3_BUCKET}/dashboards/ --exclude "*.py"
 ```
 
-### 2. Deploy monitoring infrastructure
+### 3. Deploy infrastructure + cluster
+
+`deploy-cluster-stack.sh` handles the full flow in one command:
 
 ```bash
+./scripts/deploy-cluster-stack.sh
+```
+
+Or step by step:
+
+**3a. CloudFormation stack (VPC, FSx, monitoring)**
+
+```bash
+MY_IP=$(curl -s https://checkip.amazonaws.com)
+
 aws cloudformation create-stack \
-  --region us-east-1 \
   --stack-name gpu-cluster-for-ml \
-  --template-body file://infrastructure/gpu-cluster-infra.yaml \
+  --template-body file://parallelcluster-infrastructure.yaml \
   --capabilities CAPABILITY_IAM \
   --parameters \
-    ParameterKey=PrimarySubnetAZ,ParameterValue=us-east-1a \
-    ParameterKey=SecondarySubnetAZ,ParameterValue=us-east-1b \
-    ParameterKey=MonitoringKeyPair,ParameterValue=<YOUR_KEYPAIR> \
-    ParameterKey=AllowedIPsForSSH,ParameterValue=<YOUR_IP>/32 \
-    ParameterKey=AllowedIPsForALB,ParameterValue=<YOUR_IP>/32 \
-    ParameterKey=GrafanaAdminPassword,ParameterValue=<YOUR_PASSWORD> \
+    ParameterKey=PrimarySubnetAZ,ParameterValue=${REGION}a \
+    ParameterKey=SecondarySubnetAZ,ParameterValue=${REGION}b \
+    ParameterKey=MonitoringType,ParameterValue=self-hosting \
+    ParameterKey=MonitoringKeyPair,ParameterValue=${KEY_PAIR} \
+    ParameterKey=AllowedIPsForSSH,ParameterValue="${MY_IP}/32" \
+    ParameterKey=AllowedIPsForALB,ParameterValue="${MY_IP}/32" \
+    ParameterKey=GrafanaAdminPassword,ParameterValue=${GRAFANA_PASS} \
     ParameterKey=S3BucketName,ParameterValue=${S3_BUCKET}
 ```
 
-Stack creation takes ~10 min. Grafana URL is in the `GrafanaURL` output.  
-Dashboards are automatically provisioned from S3 during stack creation.
+Monitoring type options: `self-hosting` | `amp-only` | `amp+amg` | `none`
 
-> **First access**: Grafana starts via Docker on the monitoring instance. Allow 2–3 min after stack `CREATE_COMPLETE` before the ALB health check passes and the URL becomes reachable.
-
-### 3. Deploy ParallelCluster
-
-Use the one-liner (handles CFn output lookup + config substitution + cluster creation):
+**3b. Generate cluster config**
 
 ```bash
-./scripts/redeploy.sh <GRAFANA_PASSWORD> [CLUSTER_NAME]
+source environment-variables.sh
+envsubst < cluster-config.yaml.template > cluster-config-generated.yaml
 ```
 
-Or manually fill placeholders in `cluster/cluster-config.yaml` and run:
+**3c. Create cluster**
 
 ```bash
-pcluster create-cluster --region us-east-1 --cluster-name <NAME> \
-  --cluster-configuration cluster/cluster-config-<NAME>.yaml
+pcluster create-cluster \
+  --cluster-name my-cluster \
+  --cluster-configuration cluster-config-generated.yaml \
+  --region ${REGION}
 ```
 
-Cluster creation takes ~15-20 min.
-
-### 4. Import dashboards
+### 4. Access Grafana
 
 ```bash
-./scripts/import-dashboards.sh http://<ALB_DNS> <GRAFANA_PASSWORD>
+aws cloudformation describe-stacks --stack-name gpu-cluster-for-ml \
+  --query 'Stacks[0].Outputs[?OutputKey==`GrafanaURL`].OutputValue' --output text
 ```
 
-> **Slurm metrics**: `slurm_exporter` builds from source (~10 min) automatically after cluster boot. Slurm metrics appear in Grafana ~10 min after `CREATE_COMPLETE`. No manual action needed.
-
-## What's monitored
-
-| Exporter | Port | Metrics |
-|----------|------|---------|
-| node_exporter | 9100 | CPU, memory, disk I/O, PSI pressure, EFA counters |
-| dcgm-exporter | 9400 | GPU util/temp/power/clock/ECC, NVLink bandwidth |
-| slurm_exporter | 8080 | Node states, CPU/memory allocation, job queue |
-
-## Supported GPU instance types
-
-DCGM exporter `4.5.2-4.8.1` supports all architectures below. No instance-specific flags needed.
-
-| Instance | GPU | Architecture |
-|----------|-----|-------------|
-| g5.12/48xlarge | A10G | Ampere |
-| p5.48xlarge | H100 SXM | Hopper |
-| p5e/p5en.48xlarge | H200 SXM | Hopper |
-| p6-b200.48xlarge | B200 | Blackwell |
-| p6-gb200.48xlarge | GB200 | Blackwell (Grace+B200) |
-| — | GB300 | Blackwell Ultra (DCGM 4.8.x support confirmed, not yet GA on AWS) |
-
-Change `InstanceType` in the cluster config to switch GPU types. Everything else stays the same.
-
-## Customizing dashboards
-
-Edit `dashboards/generate-dashboards.py` and regenerate:
+Import dashboards:
 
 ```bash
-python3 dashboards/generate-dashboards.py
-./scripts/import-dashboards.sh http://<ALB_DNS> <GRAFANA_PASSWORD>
+./scripts/import-dashboards.sh http://<grafana-url> ${GRAFANA_PASS}
 ```
 
-## Integration with parallelcluster-for-llm-training
+> slurm_exporter is built from source at cluster boot (~10 min). Slurm metrics appear in Grafana after the build completes.
 
-This repo is designed to merge into `parallelcluster-for-llm-training` as a `monitoring/` subdirectory:
+---
 
-```
-parallelcluster-for-llm-training/
-├── ... (existing content)
-└── monitoring/          ← this repo
-    ├── infrastructure/
-    ├── cluster/
-    ├── scripts/
-    └── dashboards/
-```
+## Monitoring
 
-The `OnNodeConfigured` scripts in `scripts/` are referenced from the cluster config's `CustomActions` section. The monitoring CloudFormation stack can be deployed independently of the main infrastructure stack — just supply the VPC/subnet/SG IDs from whichever stack you use.
+### Self-hosted (self-hosting mode)
 
-## Migrating stacks (preserving FSx data)
+Deployed automatically when `MonitoringType=self-hosting`:
 
-If you need to tear down and redeploy the infrastructure stack while keeping FSx data (e.g. NeMo images, datasets):
+| Component | Version | Port |
+|-----------|---------|------|
+| Prometheus | v3.11.2 | 9090 |
+| Grafana OSS | v13.0.1 | 3000 (via ALB :80) |
+| DCGM Exporter | v4.5.2 | 9400 (compute nodes) |
+| node_exporter | v1.11.1 | 9100 (all nodes) |
+| slurm_exporter | v1.8.0 | 8080 (head node) |
+
+DCGM Exporter 4.5.2 supports A10G, H100, H200, B200, GB200.
+
+Prometheus uses EC2 service discovery via `parallelcluster:cluster-name` and `slurm:hostname` tags — no manual target configuration needed.
+
+### AWS Managed (amp-only / amp+amg mode)
+
+See [guide/06-amp-amg-setup.md](guide/06-amp-amg-setup.md).
+
+---
+
+## p6-b200 (Blackwell) Support
+
+p6-b200 requires additional setup not included in the standard pcluster AMI. Use the custom AMI build script:
 
 ```bash
-# 1. Before deleting the stack — change FSx DeletionPolicy to Retain
-aws cloudformation get-template \
-  --stack-name <STACK_NAME> --region <REGION> \
-  --query 'TemplateBody' --output text \
-  | sed 's/DeletionPolicy: Delete/DeletionPolicy: Retain/g; s/UpdateReplacePolicy: Delete/UpdateReplacePolicy: Retain/g' \
-  > /tmp/retain-fsx.yaml
-
-aws cloudformation update-stack \
-  --stack-name <STACK_NAME> --region <REGION> \
-  --template-body file:///tmp/retain-fsx.yaml \
-  --capabilities CAPABILITY_IAM \
-  --parameters ... # use UsePreviousValue=true for all params
-
-# 2. Delete old stack (FSx is retained)
-aws cloudformation delete-stack --stack-name <STACK_NAME> --region <REGION>
-
-# 3. Deploy new stack
-aws cloudformation deploy ...
-
-# 4. In the new cluster config, reference the existing FSx ID
-#    (do NOT create a new FSx — point FsxLustreSettings.FileSystemId to existing fs-xxxx)
+./scripts/build-p6b200-ami.sh
 ```
 
-> **Default behavior**: `DeletionPolicy: Delete` — FSx is destroyed with the stack. This is correct for fresh deployments.
+This adds `ib_umad`, `nvlsm`, and `nvidia-fabricmanager` enable — required for NVSwitch fabric initialization on B200. See [config/AMI/](config/AMI/) for details.
 
-## Compute node naming and monitoring tips
+For Capacity Block deployments, use `cluster/cluster-config-p6b200.yaml` and `scripts/deploy-p6b200.sh`.
 
-### Do NOT modify pcluster-managed EC2 tags
+---
 
-pcluster uses specific EC2 tags internally to map Slurm nodes to EC2 instances. Modifying these tags will cause pcluster to treat the node as orphaned, terminate it, and launch a replacement — losing all in-memory state including pulled container images.
+## Cluster Access
 
-**Protected tags — never modify:**
+The HeadNode is in a private subnet. Only the LoginNode is internet-facing.
+For connection methods and security recommendations, see [Security Best Practices](security-best-practices/SECURITY.md).
 
-| Tag | Purpose |
-|-----|---------|
-| `slurm:hostname` | Slurm ↔ EC2 instance mapping |
-| `parallelcluster:cluster-name` | Cluster ownership |
-| `parallelcluster:node-type` | HeadNode / Compute routing |
+---
 
-**Safe to modify:** `Name` tag — only used for display in EC2 console.
+## Software Installation on Cluster Nodes
 
-### Changing node display names in Grafana
+Three approaches for installing GPU software (NCCL, frameworks, etc.) on cluster nodes:
 
-To rename nodes in Grafana dashboards, edit the Prometheus relabeling rules in `infrastructure/gpu-cluster-infra.yaml` — not the EC2 tags.
+**Option A: CustomActions (OnNodeConfigured)**
+Scripts run automatically at cluster creation. Good for drivers and lightweight installs.
+See `scripts/setup-headnode.sh` and `scripts/setup-compute-node.sh`.
 
-```yaml
-relabel_configs:
-  - source_labels: [__meta_ec2_tag_slurm_hostname, __meta_ec2_private_ip]
-    regex: "(.+);(.+)"
-    replacement: '$1 ($2)'
-    target_label: node_name
+**Option B: FSx shared storage**
+Pre-install to `/fsx` so all nodes share binaries without re-downloading.
+Recommended for NCCL and large framework installations.
+
+**Option C: Containers**
+Use NGC containers via Pyxis/Enroot. Fastest iteration for framework changes.
+
+---
+
+## Performance Reference
+
+| Instance | GPU | NVSwitch BW | EFA BW | GPU Memory |
+|----------|-----|-------------|--------|------------|
+| p5.48xlarge | H100 x8 SXM | 900 GB/s | 3.2 Tbps | 640 GB HBM3 |
+| p5e/p5en.48xlarge | H200 x8 SXM | 900 GB/s | 3.2 Tbps | 1128 GB HBM3e |
+| p6-b200.48xlarge | B200 x8 | 900 GB/s | 3.2 Tbps | 1440 GB HBM3e |
+
+---
+
+## Troubleshooting
+
+```bash
+# Check cluster status
+pcluster describe-cluster --cluster-name <NAME> --region <REGION>
+
+# Watch compute node bootstrap
+./scripts/monitor-compute-node-setup.sh <CLUSTER_NAME>
+
+# Check CloudFormation events
+aws cloudformation describe-stack-events --stack-name gpu-cluster-for-ml \
+  --query 'StackEvents[?ResourceStatus==`CREATE_FAILED`].[LogicalResourceId,ResourceStatusReason]'
 ```
 
-Replace the `replacement` pattern to change how node names appear in dashboards.
+For detailed troubleshooting, see the [guide/](guide/) directory.
 
-## Known issues
+---
 
-- **Profiling metrics** (`DCGM_FI_PROF_*`) require `nv-hostengine` running on the host — not available in Docker-only mode. Basic metrics (clock, temp, util, memory, ECC) work fine.
-- **DCGM on hosts without nvidia-container-toolkit** requires `--pid=host -v /usr/lib/x86_64-linux-gnu:/...` — already set in `setup-compute-node.sh`.
-- **LoginNode** node_exporter is not monitored (low priority).
-- **Stale Prometheus series** after node rename/retag: disappear automatically after ~15 min (TSDB staleness timeout).
+## Additional Resources
+
+- [AWS ParallelCluster Documentation](https://docs.aws.amazon.com/parallelcluster/)
+- [NVIDIA DCGM Documentation](https://docs.nvidia.com/datacenter/dcgm/)
+- [EFA Documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html)
+
+---
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
