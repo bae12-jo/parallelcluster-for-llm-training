@@ -363,25 +363,95 @@ cat > /usr/local/bin/slurm-node-reason-collector.sh << 'REASONEOF'
 #!/bin/bash
 OUTFILE="/var/lib/node_exporter/textfile/slurm_node_reasons.prom"
 TMPFILE="${OUTFILE}.tmp"
+NOW=$(date +%s)
 > "${TMPFILE}"
 export PATH=/opt/slurm/bin:$PATH
+
+# ── 1. Slurm node state + reason (from sinfo) ────────────────────────────────
 while IFS= read -r line; do
-  node=$(echo "$line" | awk '{print $1}')
-  state=$(echo "$line" | awk '{print $2}')
-  reason=$(echo "$line" | cut -d' ' -f3-)
+  node=$(echo "$line"     | awk '{print $1}')
+  state_raw=$(echo "$line"| awk '{print $2}')
+  node_addr=$(echo "$line"| awk '{print $3}')
+  reason=$(echo "$line"   | cut -d' ' -f4-)
   [ -z "$node" ] && continue
+  state=$(echo "$state_raw" | tr -d '~*#$%+!' | tr '[:upper:]' '[:lower:]')
   reason="${reason:-none}"
-  printf 'slurm_node_state_reason{node="%s",state="%s",reason="%s"} 1\n' \
-    "$node" "$state" "$reason" >> "${TMPFILE}"
-done < <(sinfo -h -o '%N %T %E' -N 2>/dev/null)
+  # node_addr == node_name when powered down; use empty string in that case
+  [ "$node_addr" = "$node" ] && node_addr=""
+  printf 'slurm_node_state_reason{node="%s",state="%s",state_raw="%s",node_addr="%s",reason="%s"} %s\n' \
+    "$node" "$state" "$state_raw" "$node_addr" "$reason" "$NOW" >> "${TMPFILE}"
+done < <(sinfo -h -o '%N %T %o %E' -N 2>/dev/null)
+
+# ── 2. clustermgtd ALL node lifecycle events (ring buffer, last 24h) ─────────
+EVENTS_FILE="/var/lib/node_exporter/textfile/clustermgtd_events.prom"
+EVENTS_TMP="${EVENTS_FILE}.tmp"
+> "${EVENTS_TMP}"
+
+LOGFILE="/var/log/parallelcluster/clustermgtd"
+[ -f "$LOGFILE" ] || LOGFILE="/var/log/parallelcluster/clustermgtd.log"
+
+if [ -f "$LOGFILE" ]; then
+  CUTOFF=$(date -d '24 hours ago' '+%Y-%m-%d %H:%M:%S' 2>/dev/null || \
+           date -v-24H '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo "")
+
+  # Match ALL lines that reference a node name pattern or state change
+  grep -E \
+    "node.*state|state.*node|terminating|replacing|replaced|unhealthy|bootstrap|capacity|powered|powering|waking|launched|resuming|IDLE|DOWN|DRAIN|maintenance|replacement|resume|suspend|scaling" \
+    "$LOGFILE" 2>/dev/null | \
+  grep -E "[a-z0-9\-]+st[a-z0-9\-]+nodes-[0-9]+" | \
+  while IFS= read -r entry; do
+    # Extract timestamp
+    ts_str=$(echo "$entry" | grep -oP '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}')
+    [ -z "$ts_str" ] && continue
+    [ -n "$CUTOFF" ] && [[ "$ts_str" < "$CUTOFF" ]] && continue
+    ts_epoch=$(date -d "$ts_str" +%s 2>/dev/null || \
+               date -j -f "%Y-%m-%d %H:%M:%S" "$ts_str" +%s 2>/dev/null || echo 0)
+    [ "$ts_epoch" -eq 0 ] && continue
+
+    # Extract node name (pcluster static node naming pattern)
+    node=$(echo "$entry" | grep -oP "[a-z0-9\-]+st[a-z0-9\-]+nodes-[0-9]+" | head -1)
+    [ -z "$node" ] && continue
+
+    # Classify event type (ordered: most specific first)
+    event_type="info"
+    echo "$entry" | grep -qiE "bootstrap.failure|unhealthy"          && event_type="bootstrap_failure"
+    echo "$entry" | grep -qiE "LimitedInstanceCapacity|ReservationCapacityExceeded|capacity" \
+                                                                       && event_type="capacity_error"
+    echo "$entry" | grep -qiE "terminating|being replaced|terminate"  && event_type="terminated"
+    echo "$entry" | grep -qiE "in replacement|currently in replacement" && event_type="replacing"
+    echo "$entry" | grep -qiE "Setting.*DOWN|set.*down|state.*DOWN"   && event_type="set_down"
+    echo "$entry" | grep -qiE "Setting.*IDLE|set.*idle|state.*IDLE|now responding|powered up" \
+                                                                       && event_type="set_idle"
+    echo "$entry" | grep -qiE "Setting.*DRAIN|drained|draining"       && event_type="set_drained"
+    echo "$entry" | grep -qiE "waking|powering.up|resuming|resume|POWERING_UP" \
+                                                                       && event_type="powering_up"
+    echo "$entry" | grep -qiE "powered.down|power.down|POWERED_DOWN|suspend" \
+                                                                       && event_type="powered_down"
+    echo "$entry" | grep -qiE "launched|launch|new instance"          && event_type="launched"
+    echo "$entry" | grep -qiE "maintenance|replacing.*maintenance"    && event_type="maintenance"
+
+    # Short reason: strip log prefix, keep 150 chars
+    reason=$(echo "$entry" | sed 's/.*\] - //' | sed 's/.*\] //' | \
+             cut -c1-150 | tr '"' "'" | tr '\n' ' ' | sed 's/  */ /g')
+
+    printf 'slurm_node_event{node="%s",event_type="%s",reason="%s"} %s\n' \
+      "$node" "$event_type" "$reason" "$ts_epoch" >> "${EVENTS_TMP}"
+  done
+
+  # Keep only latest entry per node+event_type (sort by timestamp DESC, keep first seen)
+  # Value (timestamp) is the last field; sort numerically descending on it
+  sort -t' ' -k2,2rn "${EVENTS_TMP}" 2>/dev/null | \
+    awk -F'"' '!seen[$2"_"$4]++' > "${EVENTS_FILE}" 2>/dev/null || \
+    mv "${EVENTS_TMP}" "${EVENTS_FILE}"
+fi
+
 mv "${TMPFILE}" "${OUTFILE}" 2>/dev/null || true
 REASONEOF
 chmod +x /usr/local/bin/slurm-node-reason-collector.sh
 
-# Run every minute via cron
-cat >> /etc/cron.d/tag-compute-nodes << 'CRONEOF'
-* * * * * root /usr/local/bin/slurm-node-reason-collector.sh
-CRONEOF
+# Run every minute via cron (independent file)
+echo '* * * * * root /usr/local/bin/slurm-node-reason-collector.sh' \
+  > /etc/cron.d/slurm-node-reason-collector
 
 # Seed initial run (slurm may not be ready yet — ignore errors)
 /usr/local/bin/slurm-node-reason-collector.sh || true

@@ -252,12 +252,17 @@ https://download.docker.com/linux/ubuntu \${CODENAME} stable" \
   apt-get install -y docker-ce docker-ce-cli containerd.io nvidia-container-toolkit
   nvidia-ctk runtime configure --runtime=docker
   systemctl enable --now docker
+  # Docker install sets reboot-required — clear immediately
+  rm -f /var/run/reboot-required /var/run/reboot-required.pkgs 2>/dev/null || true
 fi
 # Pull image if not cached yet
 docker image inspect "\${DCGM_IMAGE}" &>/dev/null || \
   docker pull "\${DCGM_IMAGE}" 2>&1 | logger -t dcgm-pull || true
 # Start service (enabled by OnNodeConfigured, handles both first boot and reboot)
 systemctl start dcgm-exporter 2>/dev/null || true
+
+# Final reboot-required clear — catches any apt install in this script
+rm -f /var/run/reboot-required /var/run/reboot-required.pkgs 2>/dev/null || true
 
 echo "=== Post-slurmd setup complete ==="
 MONEOF
