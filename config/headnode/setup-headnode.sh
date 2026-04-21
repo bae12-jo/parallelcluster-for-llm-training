@@ -305,6 +305,16 @@ ${AWS_CLI} ec2 create-tags --region "${REGION}" --resources "${INSTANCE_ID}" \
   --tags Key=parallelcluster:node-type,Value=HeadNode \
          Key=slurm:hostname,Value=headnode 2>/dev/null || true
 
+# ---- Slurm TaskProlog — inject HPC env into every sbatch/srun job ----
+# slurmctld reads slurm.conf; TaskProlog runs on the compute node inside the job env.
+# The prolog file itself is deployed by setup-compute-node.sh — we just register the path here.
+SLURM_CONF=/opt/slurm/etc/slurm.conf
+if [ -f "${SLURM_CONF}" ] && ! grep -q "^TaskProlog" "${SLURM_CONF}"; then
+  echo "TaskProlog=/opt/slurm/etc/task_prolog.sh" >> "${SLURM_CONF}"
+  systemctl reload slurmctld 2>/dev/null || systemctl restart slurmctld 2>/dev/null || true
+  echo "TaskProlog registered in slurm.conf"
+fi
+
 # ---- Compute node hostname tagger (cron backup) ----
 # Compute nodes tag themselves at boot, but Slurm hostname may not be assigned in time.
 # This cron runs every 5 minutes from HeadNode and tags any compute node missing slurm:hostname.

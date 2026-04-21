@@ -60,7 +60,7 @@ Scheduling:
   SlurmQueues:
     - Name: p6b200
       Image:
-        CustomAmi: ami-01cda51fd7b41c499  # DLAMI Base Ubuntu22.04 + driver 580.126.09 + FM
+        CustomAmi: ami-0a67326752250cc8b  # pcluster 3.15 v7 custom AMI (us-east-2)
       CapacityType: CAPACITY_BLOCK
       Networking:
         SubnetIds:
@@ -83,8 +83,8 @@ Scheduling:
       ComputeResources:
         - Name: p6b200-nodes
           InstanceType: p6-b200.48xlarge
-          MinCount: 2
-          MaxCount: 2
+          MinCount: 1
+          MaxCount: 1
           CapacityReservationTarget:
             CapacityReservationId: <CAPACITY_RESERVATION_ID>
           Efa:
